@@ -1,0 +1,16 @@
+package soliton.piezo;
+option java_package = "io.soliton.protobuf.plugin.testing";
+option java_outer_classname = "Testing";
+
+message Person {
+  optional string name = 1;
+}
+
+message PhoneNumber {
+  optional int32 area_code = 1;
+  optional int32 number = 2;
+}
+
+service PhoneBook {
+  rpc Lookup(Person) returns(PhoneNumber);
+}
