@@ -26,19 +26,19 @@ import com.google.protobuf.Parser;
  */
 public interface ClientMethod<O> {
 
-	/**
-	 * Returns the name of the service in which this method is defined.
-	 */
-	public String serviceName();
-	
-	/**
-	 * Returns the name of this method.
-	 */
-	public String name();
-	
-	/**
-	 * Returns a parser capable of handling content for this method's return
-	 * type.
-	 */
-	public Parser<O> outputParser();
+  /**
+   * Returns the name of the service in which this method is defined.
+   */
+  public String serviceName();
+
+  /**
+   * Returns the name of this method.
+   */
+  public String name();
+
+  /**
+   * Returns a parser capable of handling content for this method's return
+   * type.
+   */
+  public Parser<O> outputParser();
 }

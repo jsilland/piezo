@@ -23,5 +23,5 @@ package io.soliton.protobuf;
  */
 public interface Server {
 
-	public ServiceGroup serviceGroup();
+  public ServiceGroup serviceGroup();
 }

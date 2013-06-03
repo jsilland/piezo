@@ -50,123 +50,123 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
   private static final Logger logger = Logger.getLogger(
       TcpServer.class.getCanonicalName());
 
-	private final int port;
-	private final ServiceGroup serviceGroup;
-	private final ConcurrentMap<Long, ListenableFuture<?>> pendingRequests;
+  private final int port;
+  private final ServiceGroup serviceGroup;
+  private final ConcurrentMap<Long, ListenableFuture<?>> pendingRequests;
 
-	private Channel channel;
-	private EventLoopGroup parentGroup;
-	private EventLoopGroup childGroup;
+  private Channel channel;
+  private EventLoopGroup parentGroup;
+  private EventLoopGroup childGroup;
 
   /**
    * Creates a new server.
    *
    * @param port the port the server should bind to
    */
-	public TcpServer(int port) {
-		Preconditions.checkArgument(port > 0);
-		this.port = port;
-		serviceGroup = new DefaultServiceGroup();
-		pendingRequests = new MapMaker().makeMap();
-	}
+  public TcpServer(int port) {
+    Preconditions.checkArgument(port > 0);
+    this.port = port;
+    serviceGroup = new DefaultServiceGroup();
+    pendingRequests = new MapMaker().makeMap();
+  }
 
   /**
    * Returns the set of services surfaced on this server.
    */
-	public ServiceGroup serviceGroup() {
-		return serviceGroup;
-	}
+  public ServiceGroup serviceGroup() {
+    return serviceGroup;
+  }
 
   /**
    * Starts this server.
    */
-	public void start() {
+  public void start() {
     logger.info(String.format("Starting Piezo server on TCP port %d", port));
-		ServerBootstrap bootstrap = new ServerBootstrap();
-		parentGroup = new NioEventLoopGroup();
-		childGroup = new NioEventLoopGroup();
-		bootstrap.group(parentGroup, childGroup)
-				.channel(NioServerSocketChannel.class)
-				.childHandler(new ChannelInitializer<Channel>() {
+    ServerBootstrap bootstrap = new ServerBootstrap();
+    parentGroup = new NioEventLoopGroup();
+    childGroup = new NioEventLoopGroup();
+    bootstrap.group(parentGroup, childGroup)
+        .channel(NioServerSocketChannel.class)
+        .childHandler(new ChannelInitializer<Channel>() {
 
-					@Override
-					protected void initChannel(Channel channel) throws Exception {
-						channel.pipeline().addLast("frameDecoder",
-								new LengthFieldBasedFrameDecoder(10 * 1024 * 1024, 0, 4, 0, 4));
-						channel.pipeline().addLast("protobufDecoder",
-		            new ProtobufDecoder(Envelope.getDefaultInstance()));
-						channel.pipeline().addLast("frameEncoder", new LengthFieldPrepender(4));
-						channel.pipeline().addLast("protobufEncoder", new ProtobufEncoder());
-						channel.pipeline().addLast("piezoServerTransport", TcpServer.this);
-						
-					}
-				});
-		
-		ChannelFuture futureChannel = bootstrap.bind(port).awaitUninterruptibly();
-		if (futureChannel.isSuccess()) {
-			this.channel = futureChannel.channel();
+          @Override
+          protected void initChannel(Channel channel) throws Exception {
+            channel.pipeline().addLast("frameDecoder",
+                new LengthFieldBasedFrameDecoder(10 * 1024 * 1024, 0, 4, 0, 4));
+            channel.pipeline().addLast("protobufDecoder",
+                new ProtobufDecoder(Envelope.getDefaultInstance()));
+            channel.pipeline().addLast("frameEncoder", new LengthFieldPrepender(4));
+            channel.pipeline().addLast("protobufEncoder", new ProtobufEncoder());
+            channel.pipeline().addLast("piezoServerTransport", TcpServer.this);
+
+          }
+        });
+
+    ChannelFuture futureChannel = bootstrap.bind(port).awaitUninterruptibly();
+    if (futureChannel.isSuccess()) {
+      this.channel = futureChannel.channel();
       logger.info("Piezo server started successfully.");
-		} else {
+    } else {
       logger.info("Failed to start Piezo server.");
-			throw new RuntimeException(futureChannel.cause());
-		}
-	}
+      throw new RuntimeException(futureChannel.cause());
+    }
+  }
 
   /**
    * Stops this server.
    */
-	public void stop() {
+  public void stop() {
     logger.info("Shutting down Piezo server.");
-		channel.close().addListener(new GenericFutureListener<Future<Void>>() {
+    channel.close().addListener(new GenericFutureListener<Future<Void>>() {
 
-			@Override
-			public void operationComplete(Future<Void> future) throws Exception {
-				parentGroup.shutdown();
-				childGroup.shutdown();
-			}
-		});
-	}
+      @Override
+      public void operationComplete(Future<Void> future) throws Exception {
+        parentGroup.shutdown();
+        childGroup.shutdown();
+      }
+    });
+  }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void messageReceived(ChannelHandlerContext context, Envelope request)
-			throws Exception {
-		if (request.hasControl() && request.getControl().getCancel()) {
-			ListenableFuture<?> pending = pendingRequests.remove(request.getRequestId());
-			if (pending != null) {
-				boolean cancelled = pending.cancel(true);
-				channel.write(Envelope.newBuilder()
-						.setRequestId(request.getRequestId())
-						.setControl(Control.newBuilder().setCancel(cancelled)).build());
-			}
-		}
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void messageReceived(ChannelHandlerContext context, Envelope request)
+      throws Exception {
+    if (request.hasControl() && request.getControl().getCancel()) {
+      ListenableFuture<?> pending = pendingRequests.remove(request.getRequestId());
+      if (pending != null) {
+        boolean cancelled = pending.cancel(true);
+        channel.write(Envelope.newBuilder()
+            .setRequestId(request.getRequestId())
+            .setControl(Control.newBuilder().setCancel(cancelled)).build());
+      }
+    }
 
-		Service service = serviceGroup.lookupByName(request.getService());
-		if (service == null) {
+    Service service = serviceGroup.lookupByName(request.getService());
+    if (service == null) {
       logger.warning(String.format(
           "Received request for unknown service %s", request.getService()));
-			context.channel().write(Envelope.newBuilder()
+      context.channel().write(Envelope.newBuilder()
           .setRequestId(request.getRequestId())
           .setControl(Control.newBuilder()
               .setError(String.format("Unknown service %s", request.getService())))
           .build());
-		}
+    }
 
-		ServerMethod<? extends Message, ? extends Message> method =
-				service.lookup(request.getMethod());
-		if (method == null) {
-			context.channel().write(Envelope.newBuilder()
+    ServerMethod<? extends Message, ? extends Message> method =
+        service.lookup(request.getMethod());
+    if (method == null) {
+      context.channel().write(Envelope.newBuilder()
           .setRequestId(request.getRequestId())
           .setControl(Control.newBuilder()
               .setError(
                   String.format("Unknown method %s/%s", request.getService(),
                       request.getMethod())))
           .build());
-		}
-		invoke(method, request.getPayload(), request.getRequestId(), context.channel());
-	}
+    }
+    invoke(method, request.getPayload(), request.getRequestId(), context.channel());
+  }
 
   /**
    * Performs a single method invocation.
@@ -178,18 +178,18 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
    * @param <I> the type of the method's parameter
    * @param <O> the return type of the method
    */
-	private <I extends Message, O extends Message> void invoke(
-			ServerMethod<I, O> method, ByteString payload, long requestId, Channel channel) {
-		FutureCallback<O> callback = new ServerMethodCallback<O>(requestId, channel);
-		try {
-			I request = method.inputParser().parseFrom(payload);
-			ListenableFuture<O> result = method.invoke(request);
-			pendingRequests.put(requestId, result);
-			Futures.addCallback(result, callback);
-		} catch (InvalidProtocolBufferException ipbe) {
-			callback.onFailure(ipbe);
-		}
-	}
+  private <I extends Message, O extends Message> void invoke(
+      ServerMethod<I, O> method, ByteString payload, long requestId, Channel channel) {
+    FutureCallback<O> callback = new ServerMethodCallback<O>(requestId, channel);
+    try {
+      I request = method.inputParser().parseFrom(payload);
+      ListenableFuture<O> result = method.invoke(request);
+      pendingRequests.put(requestId, result);
+      Futures.addCallback(result, callback);
+    } catch (InvalidProtocolBufferException ipbe) {
+      callback.onFailure(ipbe);
+    }
+  }
 
   /**
    * Encapsulates the logic to execute upon the execution of a server
@@ -197,27 +197,27 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
    *
    * @param <O> the method's return type
    */
-	private class ServerMethodCallback<O extends Message> implements FutureCallback<O> {
+  private class ServerMethodCallback<O extends Message> implements FutureCallback<O> {
 
-		private final long requestId;
+    private final long requestId;
     private final Channel channel;
-		
-		private ServerMethodCallback(long requestId, Channel channel) {
-			this.requestId = requestId;
+
+    private ServerMethodCallback(long requestId, Channel channel) {
+      this.requestId = requestId;
       this.channel = channel;
-		}
-		
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public void onSuccess(O result) {
-			pendingRequests.remove(requestId);
-			Envelope response = Envelope.newBuilder()
-					.setPayload(result.toByteString())
-					.setRequestId(requestId)
-					.build();
-			channel.write(response).addListener(new GenericFutureListener<ChannelFuture>() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onSuccess(O result) {
+      pendingRequests.remove(requestId);
+      Envelope response = Envelope.newBuilder()
+          .setPayload(result.toByteString())
+          .setRequestId(requestId)
+          .build();
+      channel.write(response).addListener(new GenericFutureListener<ChannelFuture>() {
 
         public void operationComplete(ChannelFuture future) {
           if (!future.isSuccess()) {
@@ -227,22 +227,22 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
         }
 
       });
-		}
+    }
 
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public void onFailure(Throwable throwable) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onFailure(Throwable throwable) {
       logger.info("Responding with client failure");
-			pendingRequests.remove(requestId);
-			Control control = Control.newBuilder()
-					.setError(Throwables.getStackTraceAsString(throwable))
-					.build();
-			Envelope response = Envelope.newBuilder()
-					.setControl(control)
-					.build();
-			channel.write(response).addListener(new GenericFutureListener<ChannelFuture>() {
+      pendingRequests.remove(requestId);
+      Control control = Control.newBuilder()
+          .setError(Throwables.getStackTraceAsString(throwable))
+          .build();
+      Envelope response = Envelope.newBuilder()
+          .setControl(control)
+          .build();
+      channel.write(response).addListener(new GenericFutureListener<ChannelFuture>() {
 
         public void operationComplete(ChannelFuture future) {
           if (!future.isSuccess()) {
@@ -252,7 +252,7 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
         }
 
       });
-		}
-		
-	}
+    }
+
+  }
 }

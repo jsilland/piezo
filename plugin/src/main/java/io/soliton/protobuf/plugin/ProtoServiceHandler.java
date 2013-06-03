@@ -23,6 +23,7 @@ import com.google.protobuf.DescriptorProtos.ServiceDescriptorProto;
 import com.google.protobuf.compiler.PluginProtos.CodeGeneratorResponse;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  *
@@ -33,10 +34,12 @@ public class ProtoServiceHandler {
 
 	private final String javaPackage;
 	private final TypeMap types;
+  private final OutputStream output;
 	
-	public ProtoServiceHandler(String javaPackage, TypeMap types) {
+	public ProtoServiceHandler(String javaPackage, TypeMap types, OutputStream  output) {
 		this.javaPackage = javaPackage;
 		this.types = Preconditions.checkNotNull(types);
+    this.output = Preconditions.checkNotNull(output);
 	}
 	
 	public void handle(ServiceDescriptorProto service) throws IOException {
@@ -114,7 +117,7 @@ public class ProtoServiceHandler {
 		response.addFileBuilder().setContent(serviceFile.toString())	
 				.setName(javaPackage.replace('.', '/') + '/' + service.getName() + ".java")
 				.build();
-		response.build().writeTo(System.out);
+		response.build().writeTo(output);
 	}
 	
 	private String newMethodDeclaration(MethodDescriptorProto method) {

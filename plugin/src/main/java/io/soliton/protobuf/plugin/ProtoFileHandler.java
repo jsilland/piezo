@@ -38,7 +38,7 @@ public class ProtoFileHandler {
 	
 	public void handle(FileDescriptorProto protoFile) throws IOException {
 		String javaPackage = inferJavaPackage(protoFile);
-		ProtoServiceHandler serviceHandler = new ProtoServiceHandler(javaPackage, types);
+		ProtoServiceHandler serviceHandler = new ProtoServiceHandler(javaPackage, types, System.out);
 		for (ServiceDescriptorProto service : protoFile.getServiceList()) {
 			serviceHandler.handle(service);
 		}

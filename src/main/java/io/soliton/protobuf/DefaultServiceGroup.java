@@ -28,22 +28,22 @@ import java.util.Map;
  */
 public class DefaultServiceGroup implements ServiceGroup {
 
-	private final Map<String, Service> services = Maps.newHashMap();
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void addService(Service service) {
-		Preconditions.checkNotNull(service);
-		services.put(service.fullName(), service);
-	}
+  private final Map<String, Service> services = Maps.newHashMap();
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Service lookupByName(String name) {
-		return services.get(name);
-	}
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void addService(Service service) {
+    Preconditions.checkNotNull(service);
+    services.put(service.fullName(), service);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Service lookupByName(String name) {
+    return services.get(name);
+  }
 }

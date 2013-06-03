@@ -26,14 +26,14 @@ import com.google.protobuf.Message;
  */
 public interface Client {
 
-	/**
-	 * Encodes a single method call and propagates it to the service end of this
-	 * transport.
-	 * 
-	 * @param method the method being called
-	 * @param input the method's parameter
-	 * @return a handle on the eventual response received from the service
-	 */
-	public <O extends Message> ListenableFuture<O> encodeMethodCall(
-			ClientMethod<O> method, Message input);
+  /**
+   * Encodes a single method call and propagates it to the service end of this
+   * transport.
+   *
+   * @param method the method being called
+   * @param input the method's parameter
+   * @return a handle on the eventual response received from the service
+   */
+  public <O extends Message> ListenableFuture<O> encodeMethodCall(
+      ClientMethod<O> method, Message input);
 }

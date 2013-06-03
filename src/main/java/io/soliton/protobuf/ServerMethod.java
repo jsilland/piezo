@@ -29,17 +29,17 @@ public interface ServerMethod<I, O> {
   /**
    * Returns the name of this method.
    */
-	public String name();
+  public String name();
 
   /**
    * Returns a parser capable of parsing this method's input parameter
    */
-	public Parser<I> inputParser();
+  public Parser<I> inputParser();
 
   /**
    * Invokes this method with the given parameter.
    *
    * @param request the parameter received from the client
    */
-	public ListenableFuture<O> invoke(I request);
+  public ListenableFuture<O> invoke(I request);
 }

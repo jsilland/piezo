@@ -33,52 +33,52 @@ import com.google.protobuf.Parser;
  */
 public class ResponseFuture<V> extends AbstractFuture<V> {
 
-	private final Runnable runOnCancel;
-	private final Parser<V> parser;
-	
-	public ResponseFuture(Runnable runOnCancel, Parser<V> parser) {
-		this.runOnCancel = Preconditions.checkNotNull(runOnCancel);
-		this.parser = Preconditions.checkNotNull(parser);
-	}
-	
-	/**
-	 * Sets the response envelope of this promise.
-	 * 
-	 * @param response the envelope of the response.
-	 */
-	public void set(Envelope response) {
-		try {
-			set(parser.parseFrom(response.getPayload()));
-		} catch (InvalidProtocolBufferException ipbe) {
-			setException(ipbe);
-		}
-	}
+  private final Runnable runOnCancel;
+  private final Parser<V> parser;
+
+  public ResponseFuture(Runnable runOnCancel, Parser<V> parser) {
+    this.runOnCancel = Preconditions.checkNotNull(runOnCancel);
+    this.parser = Preconditions.checkNotNull(parser);
+  }
+
+  /**
+   * Sets the response envelope of this promise.
+   *
+   * @param response the envelope of the response.
+   */
+  public void set(Envelope response) {
+    try {
+      set(parser.parseFrom(response.getPayload()));
+    } catch (InvalidProtocolBufferException ipbe) {
+      setException(ipbe);
+    }
+  }
 
   /**
    * {@inheritDoc}
    */
-	@Override
-	public boolean set(V value) {
-		return super.set(value);
-	}
+  @Override
+  public boolean set(V value) {
+    return super.set(value);
+  }
 
   /**
    * {@inheritDoc}
    */
-	@Override
-	protected boolean setException(Throwable throwable) {
-		return super.setException(throwable);
-	}
+  @Override
+  protected boolean setException(Throwable throwable) {
+    return super.setException(throwable);
+  }
 
   /**
    * {@inheritDoc}
    */
-	@Override
-	public boolean cancel(boolean mayInterruptIfRunning) {
-		if (super.cancel(mayInterruptIfRunning)) {
-			runOnCancel.run();
-			return true;
-		}
-		return false;
-	}
+  @Override
+  public boolean cancel(boolean mayInterruptIfRunning) {
+    if (super.cancel(mayInterruptIfRunning)) {
+      runOnCancel.run();
+      return true;
+    }
+    return false;
+  }
 }
