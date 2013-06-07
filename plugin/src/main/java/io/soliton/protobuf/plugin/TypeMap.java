@@ -37,24 +37,19 @@ public class TypeMap {
 	}
 	
 	public static TypeMap of(FileDescriptorProto protoFile) {
-		System.err.println("Handling " + protoFile.getName());
 		ImmutableMap.Builder<String, JavaType> types = ImmutableMap.builder();
 		FileOptions options = protoFile.getOptions();
 		
 		String protoPackage = "." + (protoFile.hasPackage() ?
 				protoFile.getPackage() : "");
-		System.err.println("Proto package: " + protoPackage);
 		String javaPackage = options.hasJavaPackage() ?
 				options.getJavaPackage() : protoFile.hasPackage() ?
 						protoFile.getPackage() : null;
-		System.err.println("Java package: " + javaPackage);
 		String enclosingClass = options.getJavaMultipleFiles() ?
 				null : options.hasJavaOuterClassname() ?
 						options.getJavaOuterClassname() : createOuterJavaClassname(protoFile.getName());
-		System.err.println("Enclosing class: " + enclosingClass);
-						
+
 		for (DescriptorProto message : protoFile.getMessageTypeList()) {
-			System.err.println("Processing: " + message.toString());
 			types.put(protoPackage + "." + message.getName(), new JavaType(javaPackage, enclosingClass, message.getName()));
 		}
 	
