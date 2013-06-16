@@ -1,3 +1,6 @@
+target/
+plugin/target/
+
 *.class
 
 # Package Files #

@@ -18,9 +18,10 @@ package io.soliton.protobuf.plugin;
 
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.Descriptors;
-import io.soliton.protobuf.plugin.testing.Testing.Person;
+import io.soliton.protobuf.plugin.testing.TestingOneFile.Person;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
@@ -35,8 +36,7 @@ public class ProtoFileHandlerTest {
 		Descriptors.Descriptor personDescriptor = Person.getDescriptor();
 		FileDescriptorProto protoFile = personDescriptor.getFile().toProto();
 		TypeMap types = TypeMap.of(protoFile);
-		ProtoFileHandler fileHandler = new ProtoFileHandler(types);
+		ProtoFileHandler fileHandler = new ProtoFileHandler(types, new ByteArrayOutputStream());
 		fileHandler.handle(protoFile);
 	}
-
 }

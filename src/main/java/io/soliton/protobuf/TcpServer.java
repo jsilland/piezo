@@ -44,6 +44,7 @@ import java.util.logging.Logger;
  *
  * @author Julien Silland (julien@soliton.io)
  */
+@ChannelHandler.Sharable
 public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
     implements Server {
 

@@ -17,35 +17,36 @@
 package io.soliton.protobuf.plugin;
 
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteStreams;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.compiler.PluginProtos.CodeGeneratorRequest;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
- *
+ * Main class of the Piezo plugin.
  *
  * @author Julien Silland (julien@soliton.io)
  */
 public class PiezoPlugin {
 
 	private final CodeGeneratorRequest request;
+  private final OutputStream output;
 	
-	public PiezoPlugin(CodeGeneratorRequest request) {
+	public PiezoPlugin(CodeGeneratorRequest request, OutputStream output) {
 		this.request = Preconditions.checkNotNull(request);
+    this.output = Preconditions.checkNotNull(output);
 	}
 	
 	public void run() throws IOException {
 		for (FileDescriptorProto file : request.getProtoFileList()) {
-			new ProtoFileHandler(TypeMap.of(file)).handle(file);
+			new ProtoFileHandler(TypeMap.of(file), output).handle(file);
 		}
 	}
 	
 	public static void main(String... args) throws IOException {
-		CodeGeneratorRequest.Builder request = CodeGeneratorRequest.newBuilder();
-		byte[] input = ByteStreams.toByteArray(System.in);
-		request.mergeFrom(input);
-		new PiezoPlugin(request.build()).run();
+		CodeGeneratorRequest request = CodeGeneratorRequest.newBuilder()
+        .mergeFrom(System.in).build();
+		new PiezoPlugin(request, System.out).run();
 	}
 }

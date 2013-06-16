@@ -16,15 +16,19 @@
 
 package io.soliton.protobuf.plugin;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.protobuf.DescriptorProtos.DescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 
 /**
- * Keeps a tab on the known protobuf types and their associated Java type.
+ * Keeps a tab on the known protobuf message types and their associated Java
+ * type.
  *
  * @author Julien Silland (julien@soliton.io)
  */
@@ -50,7 +54,8 @@ public class TypeMap {
 						options.getJavaOuterClassname() : createOuterJavaClassname(protoFile.getName());
 
 		for (DescriptorProto message : protoFile.getMessageTypeList()) {
-			types.put(protoPackage + "." + message.getName(), new JavaType(javaPackage, enclosingClass, message.getName()));
+			types.put(protoPackage + "." + message.getName(),
+          new JavaType(javaPackage, enclosingClass, message.getName()));
 		}
 	
 		return new TypeMap(types.build());
@@ -60,11 +65,15 @@ public class TypeMap {
 	 * @param name
 	 * @return
 	 */
-	private static String createOuterJavaClassname(String name) {
+  @VisibleForTesting
+	static String createOuterJavaClassname(String name) {
 		if (name.endsWith(".proto")) {
 			name = name.substring(0, name.length() - ".proto".length());
 		}
-		return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name);
+    name = Iterables.getLast(Splitter.on('/').split(name));
+    name = name.replace('-', '_');
+		name = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name);
+    return Character.toUpperCase(name.charAt(0)) + name.substring(1);
 	}
 	
 	public JavaType lookup(String name) {

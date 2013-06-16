@@ -21,6 +21,7 @@ import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import io.soliton.protobuf.testing.TestingSingleFile;
 import io.soliton.protobuf.testing.TimeRequest;
 import io.soliton.protobuf.testing.TimeResponse;
 import io.soliton.protobuf.testing.TimeService;
@@ -49,11 +50,24 @@ public class TcpEndToEndTest {
     }
   }
 
+  private static final class DnsServer implements TestingSingleFile.Dns.Interface {
+
+    @Override
+    public ListenableFuture<TestingSingleFile.DnsResponse> resolve(
+        TestingSingleFile.DnsRequest request) {
+      TestingSingleFile.DnsResponse response = TestingSingleFile.DnsResponse.newBuilder()
+          .setIpAddress(1234567).build();
+      return Futures.immediateFuture(response);
+    }
+  }
+
   @BeforeClass
   public static void setUp() {
     server = new TcpServer(10000);
     Service timeService = TimeService.newService(new TimeServer());
+    Service dnsService = TestingSingleFile.Dns.newService(new DnsServer());
     server.serviceGroup().addService(timeService);
+    server.serviceGroup().addService(dnsService);
     server.start();
   }
 
@@ -63,7 +77,7 @@ public class TcpEndToEndTest {
   }
 
   @Test
-  public void testRequestResponse() throws InterruptedException {
+  public void testRequestResponseMultiFile() throws InterruptedException {
 
     TimeService.Interface client = TimeService.newStub(
         new TcpClient(HostAndPort.fromParts("localhost", 10000)));
@@ -74,6 +88,31 @@ public class TcpEndToEndTest {
       @Override
       public void onSuccess(TimeResponse result) {
         Assert.assertTrue(result.getTime() > 0);
+        latch.countDown();
+      }
+
+      @Override
+      public void onFailure(Throwable throwable) {
+        Throwables.propagate(throwable);
+        latch.countDown();
+      }
+    }, Executors.newCachedThreadPool());
+    latch.await();
+  }
+
+  @Test
+  public void testRequestResponseSingleFile() throws InterruptedException {
+
+    TestingSingleFile.Dns.Interface client = TestingSingleFile.Dns.newStub(
+        new TcpClient(HostAndPort.fromParts("localhost", 10000)));
+    TestingSingleFile.DnsRequest request = TestingSingleFile.DnsRequest.newBuilder()
+        .setDomain("Castro.local").build();
+
+    final CountDownLatch latch = new CountDownLatch(1);
+    Futures.addCallback(client.resolve(request), new FutureCallback<TestingSingleFile.DnsResponse>() {
+      @Override
+      public void onSuccess(TestingSingleFile.DnsResponse result) {
+        Assert.assertEquals(1234567, result.getIpAddress());
         latch.countDown();
       }
 

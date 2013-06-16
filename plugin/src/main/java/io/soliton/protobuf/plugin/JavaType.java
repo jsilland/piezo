@@ -18,13 +18,11 @@ package io.soliton.protobuf.plugin;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
 /**
- *
+ * Represents a fully qualified Java type.
  *
  * @author Julien Silland (julien@soliton.io)
  */
@@ -32,17 +30,25 @@ public class JavaType {
 
 	private static final Joiner DOT = Joiner.on('.').skipNulls();
 
-	private final List<String> tokens = Lists.newArrayList();
-	
+  private final String javaPackage;
+  private final String enclosingClass;
+  private final String className;
+
+  /**
+   * Exhaustive constructor.
+   *
+   * @param javaPackage the type's package, may be {@code null}
+   * @param enclosingClass the type's enclosing class, may be {@code null}
+   * @param className the type's name
+   */
 	public JavaType(@Nullable String javaPackage, @Nullable String enclosingClass, String className) {
-		Preconditions.checkNotNull(className);
-		tokens.add(javaPackage);
-		tokens.add(enclosingClass);
-		tokens.add(className);
+		this.className = Preconditions.checkNotNull(className);
+    this.javaPackage = javaPackage;
+    this.enclosingClass = enclosingClass;
 	}
 	
 	@Override
 	public String toString() {
-		return DOT.join(tokens);
+		return DOT.join(javaPackage, enclosingClass, className);
 	}
 }
