@@ -1,0 +1,64 @@
+@if{handler.multipleFiles}
+// Generated code. DO NOT EDIT!
+package @{handler.javaPackage};
+@end{}
+
+public abstract @{handler.multipleFiles ? '' : 'static'} class @{handler.service.name}
+  implements io.soliton.protobuf.Service {
+
+  @Override
+  public String shortName() { return "@{handler.service.name}"; }
+
+  @Override
+  public String fullName() { return "@{handler.service.name}"; }
+
+  public static interface Interface {
+    @foreach{method : handler.service.methods}
+      public com.google.common.util.concurrent.ListenableFuture<@{method.outputType}> @{method.javaName}(@{method.inputType} request);
+    @end{}
+  }
+
+  public static Interface newStub(final io.soliton.protobuf.Client transport) {
+    final com.google.common.collect.ImmutableMap<String, io.soliton.protobuf.ClientMethod<? extends com.google.protobuf.Message>> methods = com.google.common.collect.ImmutableMap.<String, io.soliton.protobuf.ClientMethod<? extends com.google.protobuf.Message>>builder()
+    @foreach{method : handler.service.methods}
+      .put("@{method.name}",  new io.soliton.protobuf.ClientMethod<@{method.outputType}>() {
+        public String serviceName() { return "@{handler.service.name}"; }
+        public String name() { return "@{method.name}"; }
+        public com.google.protobuf.Parser<@{method.outputType}> outputParser() { return @{method.outputType}.PARSER; }
+      })
+    @end{}
+      .build();
+
+    return new Interface() {
+      @foreach{method : handler.service.methods}
+        public com.google.common.util.concurrent.ListenableFuture<@{method.outputType}> @{method.javaName}(@{method.inputType} request) {
+          return (com.google.common.util.concurrent.ListenableFuture<@{method.outputType}>)
+              transport.encodeMethodCall(methods.get("@{method.name}"), request);
+        }
+      @end{}
+    };
+  }
+
+  public static io.soliton.protobuf.Service newService(final Interface implementation) {
+    final com.google.common.collect.ImmutableMap<String, io.soliton.protobuf.ServerMethod<? extends com.google.protobuf.Message, ? extends com.google.protobuf.Message>> methods = com.google.common.collect.ImmutableMap.<String, io.soliton.protobuf.ServerMethod<? extends com.google.protobuf.Message, ? extends com.google.protobuf.Message>>builder()
+    @foreach{method : handler.service.methods}
+      .put("@{method.name}", new io.soliton.protobuf.ServerMethod<@{method.inputType}, @{method.outputType}>() {
+        public String name() { return "@{method.name}"; }
+        public com.google.protobuf.Parser<@{method.inputType}> inputParser() { return @{method.inputType}.PARSER; }
+        public com.google.common.util.concurrent.ListenableFuture<@{method.outputType}> invoke(@{method.inputType} request) { return implementation.@{method.javaName}(request); }
+      })
+    @end{}
+      .build();
+
+    return new @{handler.service.name}() {
+      public io.soliton.protobuf.ServerMethod<? extends com.google.protobuf.Message, ? extends com.google.protobuf.Message> lookup(String name) {
+        return methods.get(name);
+      }
+
+      public com.google.common.collect.ImmutableMap<String, io.soliton.protobuf.ServerMethod<? extends com.google.protobuf.Message, ? extends com.google.protobuf.Message>> methods() {
+        return methods;
+      }
+    };
+  }
+}
+

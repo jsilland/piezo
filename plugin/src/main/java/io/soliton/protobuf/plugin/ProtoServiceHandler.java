@@ -17,16 +17,22 @@
 package io.soliton.protobuf.plugin;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
+import com.google.protobuf.compiler.PluginProtos.CodeGeneratorResponse;
 import com.google.protobuf.DescriptorProtos.MethodDescriptorProto;
 import com.google.protobuf.DescriptorProtos.ServiceDescriptorProto;
-import com.google.protobuf.compiler.PluginProtos.CodeGeneratorResponse;
+import org.mvel2.templates.TemplateRuntime;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- *
+ * This class is in charge of generating the code of the concrete service
+ * implementation.
  *
  * @author Julien Silland (julien@soliton.io)
  */
@@ -37,7 +43,7 @@ public class ProtoServiceHandler {
   private final boolean multipleFiles;
   private final String outerClassName;
   private final OutputStream output;
-	
+
 	public ProtoServiceHandler(String javaPackage, TypeMap types, boolean multipleFiles,
       String outerClassName, OutputStream output) {
 		this.javaPackage = javaPackage;
@@ -48,74 +54,28 @@ public class ProtoServiceHandler {
 	}
 	
 	public void handle(ServiceDescriptorProto service) throws IOException {
-		StringBuilder serviceFile = new StringBuilder();
-    if (multipleFiles) {
-      serviceFile.append("// Generated code. DO NOT EDIT!\n\n");
-      if (javaPackage != null) {
-        serviceFile.append("package ").append(javaPackage).append(";\n\n");
-      }
+    ImmutableList.Builder<ServiceHandlerData.Method> methods = ImmutableList.builder();
+    for (MethodDescriptorProto method : service.getMethodList()) {
+      ServiceHandlerData.Method methodData = new ServiceHandlerData.Method(
+          method.getName(),
+          CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName()),
+          types.lookup(method.getInputType()).toString(),
+          types.lookup(method.getOutputType()).toString());
+      methods.add(methodData);
     }
 
-    String classModifiers = !multipleFiles ? "public abstract static" : "public abstract";
-		serviceFile.append(String.format("%s class %s implements io.soliton.protobuf.Service {\n",
-        classModifiers, service.getName()));
-		
-		serviceFile.append("  public String shortName() {\n");
-		serviceFile.append("    return \"").append(service.getName()).append("\";\n");
-		serviceFile.append("  }\n\n");
-		
-		serviceFile.append("  public String fullName() {\n");
-		serviceFile.append("    return \"").append(service.getName()).append("\";\n");
-		serviceFile.append("  }\n\n");
-		
-		serviceFile.append("  public static interface Interface {\n");
-		for (MethodDescriptorProto method : service.getMethodList()) {
-			String javaMethodName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName());
-			serviceFile.append("    public com.google.common.util.concurrent.ListenableFuture<").append(types.lookup(method.getOutputType())).append("> ").append(javaMethodName).append("(").append(types.lookup(method.getInputType())).append(" request);\n");
-		}
-		serviceFile.append("  }\n\n");
-		
-		serviceFile.append("  public static Interface newStub(final io.soliton.protobuf.Client transport) {\n");
-		serviceFile.append("    final com.google.common.collect.ImmutableMap<String, io.soliton.protobuf.ClientMethod<? extends com.google.protobuf.Message>> methods = com.google.common.collect.ImmutableMap.<String, io.soliton.protobuf.ClientMethod<? extends com.google.protobuf.Message>>builder()\n");
-		for (MethodDescriptorProto method : service.getMethodList()) {
-			serviceFile.append("        .put(\"").append(method.getName()).append("\", new io.soliton.protobuf.ClientMethod<").append(types.lookup(method.getOutputType())).append(">() {\n");
-			serviceFile.append("           public String serviceName() { return \"" + service.getName() + "\"; }\n");
-			serviceFile.append("           public String name() { return \"").append(method.getName()).append("\"; }\n");
-			serviceFile.append("           public com.google.protobuf.Parser<").append(types.lookup(method.getOutputType())).append("> outputParser() { return ").append(types.lookup(method.getOutputType())).append(".PARSER; }\n");
-			serviceFile.append("})\n");
-		}
-		serviceFile.append("          .build();\n");
-		serviceFile.append("    return new Interface() {\n");
-		for (MethodDescriptorProto method : service.getMethodList()) {
-			serviceFile.append("      public com.google.common.util.concurrent.ListenableFuture<").append(types.lookup(method.getOutputType())).append("> ").append(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName())).append("(").append(types.lookup(method.getInputType())).append(" request) {\n");
-			serviceFile.append("        return (com.google.common.util.concurrent.ListenableFuture<").append(types.lookup(method.getOutputType())).append(">) transport.encodeMethodCall(methods.get(\"").append(method.getName()).append("\"), request);\n");
-			serviceFile.append("      }\n");
-		}
-		serviceFile.append("    };\n");
-		serviceFile.append("  }\n\n");
-		
-		serviceFile.append("  public static io.soliton.protobuf.Service newService(final Interface implementation) {\n");
-		serviceFile.append("    final com.google.common.collect.ImmutableMap<String, io.soliton.protobuf.ServerMethod<? extends com.google.protobuf.Message, ? extends com.google.protobuf.Message>> methods = com.google.common.collect.ImmutableMap.<String, io.soliton.protobuf.ServerMethod<? extends com.google.protobuf.Message, ? extends com.google.protobuf.Message>>builder()\n");
-		for (MethodDescriptorProto method : service.getMethodList()) {
-			serviceFile.append("      .put(\"").append(method.getName()).append("\", ").append(newMethodDeclaration(method)).append(")\n");
-		}
-		serviceFile.append("      .build();\n\n");
-		
-		serviceFile.append("    return new ").append(service.getName()).append("() {\n");
-		
-		serviceFile.append("      public io.soliton.protobuf.ServerMethod<? extends com.google.protobuf.Message, ? extends com.google.protobuf.Message> lookup(String name) {\n");
-		serviceFile.append("        return methods.get(name);\n");
-		serviceFile.append("      }\n\n");
-		
-		serviceFile.append("      public com.google.common.collect.ImmutableMap<String, io.soliton.protobuf.ServerMethod<? extends com.google.protobuf.Message, ? extends com.google.protobuf.Message>> methods() {\n");
-		serviceFile.append("        return methods;\n");
-		serviceFile.append("      }\n");serviceFile.append("    };\n\n");
-		
-		serviceFile.append("  }\n");
-		serviceFile.append("}");
+    ServiceHandlerData.Service serviceData = new ServiceHandlerData.Service(
+        service.getName(), methods.build());
+    ServiceHandlerData data = new ServiceHandlerData(javaPackage, multipleFiles, serviceData);
+
+    String template = Resources.toString(Resources.getResource(this.getClass(),
+        "service_class.mvel"), Charsets.UTF_8);
+    String serviceFile = (String) TemplateRuntime.eval(template,
+        ImmutableMap.<String, Object>of("handler",  data));
+
 		CodeGeneratorResponse.Builder response = CodeGeneratorResponse.newBuilder();
     CodeGeneratorResponse.File.Builder file = CodeGeneratorResponse.File.newBuilder();
-    file.setContent(serviceFile.toString());
+    file.setContent(serviceFile);
     file.setName(javaPackage.replace('.', '/') + '/' + service.getName() + ".java");
     if (!multipleFiles) {
       file.setName(javaPackage.replace('.', '/') + '/' + outerClassName + ".java");
