@@ -17,11 +17,24 @@
 package io.soliton.protobuf;
 
 /**
+ * High-level formalization of the server-side of the RPC system.
  *
+ * <p>A server maintains a single {@link ServiceGroup} in which concrete
+ * {@link Service} instances are kept. Server instances are responsible for
+ * decoding method calls that are sent by a {@link Client} instance. As such,
+ * concrete implementations of clients and servers are generally coupled and
+ * must use the same protocol and transport.</p>
+ *
+ * <p>The configuration, startup and shutdown sequences of a server are
+ * delegated to implementations of this abstraction.</p>
  *
  * @author Julien Silland (julien@soliton.io)
  */
 public interface Server {
 
+  /**
+   * Returns the service group in which the services hosted by this server
+   * are kept.
+   */
   public ServiceGroup serviceGroup();
 }

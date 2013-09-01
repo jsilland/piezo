@@ -17,13 +17,30 @@
 package io.soliton.protobuf;
 
 /**
- * A container of {@link Service} instances.
+ * A container of {@link Service} instances, used by a {@link Server} to
+ * maintain the set of active services.
  *
  * @author Julien Silland (julien@soliton.io)
  */
 public interface ServiceGroup {
 
+  /**
+   * Adds a service to this group.
+   *
+   * <p>A service previously registered under the same
+   * {@link Service#fullName()} will be replaced by the newer one.</p>
+   *
+   * @param service the service to add.
+   */
   public void addService(Service service);
 
+  /**
+   * Looks up a service in this group by its full name.
+   *
+   * @param name the full name of the service to look up.
+   *
+   * @return a {@link Service} instance, or {@code null} if no such service
+   * exists in this group.
+   */
   public Service lookupByName(String name);
 }

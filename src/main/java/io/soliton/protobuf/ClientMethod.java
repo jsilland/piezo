@@ -19,7 +19,7 @@ package io.soliton.protobuf;
 import com.google.protobuf.Parser;
 
 /**
- * Represents a method as seen by the client-side of the RPC system.
+ * Represents a method on the client side of the RPC system.
  *
  * @author Julien Silland (julien@soliton.io)
  * @param <O> the return type of the method.
