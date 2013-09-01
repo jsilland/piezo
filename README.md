@@ -1,17 +1,19 @@
 Piezo
 =====
 
-Piezo is a Java RPC stack that combines Protocol Buffers, Netty and Guava in order to provide a state-of-the-art, lightweight and reliable channel for server-to-server communication.
+Piezo is a Java RPC stack that combines [Protocol Buffers](https://code.google.com/p/protobuf/), [Netty](http://netty.io/) and [Guava](https://code.google.com/p/guava-libraries/) in order to provide a state-of-the-art, lightweight and reliable channel for server-to-server communication.
 
 Piezo is made of two components working hand in hand:
 
 - A framework that implements a generic RPC transport between client and server
 - A plugin for the Protocol Buffer compiler that generates concrete implementations of protobuf services
 
+The Javadoc for the framework is available [here](http://jsilland.github.io/piezo/apidocs/index.html).
+
 Installation
 ------------
 
-Piezo is not yet available in Maven Central, you will have to install both the plugin and the framework manually. Both installations require a protocol buffer toolchain to be available (see Usage section).
+Piezo is not yet available in Maven Central, you will have to install both the plugin and the framework manually. Both installations require a protocol buffer toolchain to be available (see Usage section below).
 
 In `piezo/plugin`:
 
@@ -58,7 +60,7 @@ Add the Piezo framework, the protocol buffer frameowrk and Guava as dependencies
       </dependency>
     </dependencies>
 
-Define a protocol buffer service in a file placed under `src/main/proto`. For instance, create `src/main/proto/your/package/dns.proto` with the following contents:
+Define a protocol buffer service in a file placed under `src/main/proto`. In the example below, we'll take the example of a DNS service used to resolve domains names into 32-bit IPv4 addresses. Create `src/main/proto/your/package/dns.proto` with the following contents:
 
     package your.package.dns;
 
@@ -121,7 +123,7 @@ You should now be able to invoke `mvn compile` and check the generated code unde
       }
     }
 
-Instantiate a server and configure it to serve the DNS service:
+Instantiate a server and configure it to surface the DNS service:
 
     TcpServer server = new TcpServer(10000); // the server will bind to this port
     server.serverGroup().addService(Dns.newService(new DnsService()));
