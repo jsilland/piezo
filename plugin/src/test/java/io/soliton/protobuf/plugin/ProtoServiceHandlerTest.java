@@ -135,7 +135,7 @@ public class ProtoServiceHandlerTest {
       if (Tree.Kind.METHOD == member.getKind()) {
         MethodTree method = (MethodTree) member;
         methods.put(method.getName().toString(), method);
-      } else if (Tree.Kind.CLASS == member.getKind()) {
+      } else if (Tree.Kind.INTERFACE == member.getKind()) {
         interfaceClass = (ClassTree) member;
       }
     }
@@ -246,7 +246,7 @@ public class ProtoServiceHandlerTest {
       if (Tree.Kind.METHOD == member.getKind()) {
         MethodTree method = (MethodTree) member;
         methods.put(method.getName().toString(), method);
-      } else if (Tree.Kind.CLASS == member.getKind()) {
+      } else if (Tree.Kind.INTERFACE == member.getKind()) {
         interfaceClass = (ClassTree) member;
       }
     }

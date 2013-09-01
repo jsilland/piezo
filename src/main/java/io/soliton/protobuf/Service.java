@@ -46,7 +46,8 @@ public interface Service {
   public String shortName();
 
   /**
-   * Returns the fully-qualified name of the service.
+   * Returns the fully-qualified name of the service, which includes the
+   * {@code .proto} package name.
    */
   public String fullName();
 }

@@ -20,7 +20,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.Message;
 
 /**
- * Formalization of the client-side of the link to an RPC service.
+ * High-level formalization of the client-side of the RPC system.
+ *
+ * <p>A client's responsibility is to encode a method call and send it to a
+ * remote {@link Server} instance. The protocol and transport used to
+ * accomplish this task are specific to each client-server implementation.</p>
  *
  * @author Julien Silland (julien@soliton.io)
  */
