@@ -127,7 +127,7 @@ Instantiate a server and configure it to serve the DNS service:
     server.serverGroup().addService(Dns.newService(new DnsService()));
     server.start();
 
-On the client side, instantiate the stub by specifying to which host and port to connect. Then start using the interface as your noarmally would:
+On the client side, instantiate the stub by specifying to which host and port to connect. Then start using the interface as you normally would:
 
     Client transport = new TcpClient(HostAndPort.fromParts("localhost", 10000));
     Dns.Interface client = Dns.newStub(transport);
