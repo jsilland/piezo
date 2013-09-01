@@ -24,6 +24,15 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-toolchains-plugin</artifactId>
                 <version>1.0</version>
                 <executions>
@@ -69,6 +78,33 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <links>
+                        <link>http://docs.oracle.com/javase/6/docs/api</link>
+                        <link>https://developers.google.com/protocol-buffers/docs/reference/java</link>
+                        <link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc</link>
+                        <link>http://netty.io/4.0/api/</link>
+                    </links>
+                    <stylesheet>java</stylesheet>
+                    <bootclasspath>${sun.boot.class.path}</bootclasspath>
+                    <additionalJOption>-J-Xmx1024m</additionalJOption>
+                    <detectJavaApiLink>true</detectJavaApiLink>
+                    <detectLinks>true</detectLinks>
+                    <excludePackageNames>*.testing.*</excludePackageNames>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -86,7 +122,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.0.0.CR1</version>
+            <version>4.0.8.Final</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

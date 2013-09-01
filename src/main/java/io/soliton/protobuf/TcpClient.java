@@ -22,7 +22,12 @@ import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.Message;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -41,8 +46,7 @@ import java.util.logging.Logger;
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public class TcpClient extends ChannelInboundMessageHandlerAdapter<Envelope>
-    implements Client {
+public class TcpClient extends SimpleChannelInboundHandler<Envelope> implements Client {
 
   private static final Logger logger = Logger.getLogger(
       TcpClient.class.getCanonicalName());
@@ -76,7 +80,7 @@ public class TcpClient extends ChannelInboundMessageHandlerAdapter<Envelope>
         channel.pipeline().addLast("frameEncoder", new LengthFieldPrepender(4));
         channel.pipeline().addLast("protobufEncoder", new ProtobufEncoder());
         channel.pipeline().addLast("piezoSimpleTransport", TcpClient.this);
-      }
+   }
     });
 
     ChannelFuture future = bootstrap.connect(remoteAddress.getHostText(), remoteAddress.getPort());
@@ -105,7 +109,7 @@ public class TcpClient extends ChannelInboundMessageHandlerAdapter<Envelope>
         .setMethod(method.name())
         .setPayload(input.toByteString())
         .build();
-    channel.write(request).addListener(new GenericFutureListener<ChannelFuture>() {
+    channel.writeAndFlush(request).addListener(new GenericFutureListener<ChannelFuture>() {
 
       public void operationComplete(ChannelFuture future) {
         if (future.isSuccess()) {
@@ -123,7 +127,7 @@ public class TcpClient extends ChannelInboundMessageHandlerAdapter<Envelope>
    * {@inheritDoc}
    */
   @Override
-  public void messageReceived(ChannelHandlerContext context, Envelope response) throws Exception {
+  public void channelRead0(ChannelHandlerContext context, Envelope response) throws Exception {
     ResponseFuture<? extends Message> future = inFlightRequests.remove(response.getRequestId());
     if (future == null) {
       logger.warning(String.format("Received response from %s for unknown request id: %d",

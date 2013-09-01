@@ -20,7 +20,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.Parser;
 
 /**
- * The server-side representation of an RPC method.
+ * Represents a method on the server side of the RPC system.
  *
  * @author Julien Silland (julien@soliton.io)
  */

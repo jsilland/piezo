@@ -8,3 +8,7 @@ plugin/target/
 *.war
 *.ear
 *.iml
+
+# Crap
+*.swp
+.DS_Store

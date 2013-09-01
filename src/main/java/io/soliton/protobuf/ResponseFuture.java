@@ -31,7 +31,7 @@ import com.google.protobuf.Parser;
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public class ResponseFuture<V> extends AbstractFuture<V> {
+class ResponseFuture<V> extends AbstractFuture<V> {
 
   private final Runnable runOnCancel;
   private final Parser<V> parser;

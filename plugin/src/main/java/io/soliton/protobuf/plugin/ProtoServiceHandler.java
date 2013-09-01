@@ -38,22 +38,22 @@ import java.io.OutputStream;
  */
 public class ProtoServiceHandler {
 
-	private final String javaPackage;
-	private final TypeMap types;
+  private final String javaPackage;
+  private final TypeMap types;
   private final boolean multipleFiles;
   private final String outerClassName;
   private final OutputStream output;
 
-	public ProtoServiceHandler(String javaPackage, TypeMap types, boolean multipleFiles,
+  public ProtoServiceHandler(String javaPackage, TypeMap types, boolean multipleFiles,
       String outerClassName, OutputStream output) {
-		this.javaPackage = javaPackage;
-		this.types = Preconditions.checkNotNull(types);
+    this.javaPackage = javaPackage;
+    this.types = Preconditions.checkNotNull(types);
     this.multipleFiles = multipleFiles;
     this.outerClassName = multipleFiles ? null : Preconditions.checkNotNull(outerClassName);
     this.output = Preconditions.checkNotNull(output);
-	}
-	
-	public void handle(ServiceDescriptorProto service) throws IOException {
+  }
+
+  public void handle(ServiceDescriptorProto service) throws IOException {
     ImmutableList.Builder<ServiceHandlerData.Method> methods = ImmutableList.builder();
     for (MethodDescriptorProto method : service.getMethodList()) {
       ServiceHandlerData.Method methodData = new ServiceHandlerData.Method(
@@ -73,7 +73,7 @@ public class ProtoServiceHandler {
     String serviceFile = (String) TemplateRuntime.eval(template,
         ImmutableMap.<String, Object>of("handler",  data));
 
-		CodeGeneratorResponse.Builder response = CodeGeneratorResponse.newBuilder();
+    CodeGeneratorResponse.Builder response = CodeGeneratorResponse.newBuilder();
     CodeGeneratorResponse.File.Builder file = CodeGeneratorResponse.File.newBuilder();
     file.setContent(serviceFile);
     file.setName(javaPackage.replace('.', '/') + '/' + service.getName() + ".java");
@@ -83,20 +83,5 @@ public class ProtoServiceHandler {
     }
     response.addFile(file);
     response.build().writeTo(output);
-	}
-	
-	private String newMethodDeclaration(MethodDescriptorProto method) {
-		String javaMethodName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName());
-		StringBuilder methodDeclaration = new StringBuilder();
-		String inputType = types.lookup(method.getInputType()).toString();
-		String outputType = types.lookup(method.getOutputType()).toString();
-		methodDeclaration.append("new io.soliton.protobuf.ServerMethod<")
-				.append(inputType).append(", ").append(outputType).append(">() {\n")
-				.append("        public String name() { return \"").append(method.getName()).append("\"; }\n")
-		    .append("        public com.google.protobuf.Parser<").append(inputType).append("> inputParser() { return ").append(inputType).append(".PARSER; }\n")
-				.append("        public com.google.common.util.concurrent.ListenableFuture<").append(outputType).append("> invoke(").append(inputType).append(" request) { return implementation.").append(javaMethodName).append("(request); }\n")
-				.append("      }");
-
-    return methodDeclaration.toString();
-	}
+  }
 }

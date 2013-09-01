@@ -26,7 +26,12 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -44,9 +49,7 @@ import java.util.logging.Logger;
  *
  * @author Julien Silland (julien@soliton.io)
  */
-@ChannelHandler.Sharable
-public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
-    implements Server {
+public final class TcpServer extends SimpleChannelInboundHandler<Envelope> implements Server {
 
   private static final Logger logger = Logger.getLogger(
       TcpServer.class.getCanonicalName());
@@ -79,7 +82,17 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isSharable() {
+    return true;
+  }
+
+  /**
    * Starts this server.
+   *
+   * <p>This is a synchronous operation.</p>
    */
   public void start() {
     logger.info(String.format("Starting Piezo server on TCP port %d", port));
@@ -115,6 +128,8 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
 
   /**
    * Stops this server.
+   *
+   * <p>This is a synchronous operation.</p>
    */
   public void stop() {
     logger.info("Shutting down Piezo server.");
@@ -122,17 +137,17 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
 
       @Override
       public void operationComplete(Future<Void> future) throws Exception {
-        parentGroup.shutdown();
-        childGroup.shutdown();
+        parentGroup.shutdownGracefully();
+        childGroup.shutdownGracefully();
       }
-    });
+    }).awaitUninterruptibly();
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public void messageReceived(ChannelHandlerContext context, Envelope request)
+  public void channelRead0(ChannelHandlerContext context, Envelope request)
       throws Exception {
     if (request.hasControl() && request.getControl().getCancel()) {
       ListenableFuture<?> pending = pendingRequests.remove(request.getRequestId());
@@ -193,8 +208,8 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
   }
 
   /**
-   * Encapsulates the logic to execute upon the execution of a server
-   * method.
+   * Encapsulates the logic to execute upon when the invocation of a service
+   * method is done.
    *
    * @param <O> the method's return type
    */
@@ -218,7 +233,7 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
           .setPayload(result.toByteString())
           .setRequestId(requestId)
           .build();
-      channel.write(response).addListener(new GenericFutureListener<ChannelFuture>() {
+      channel.writeAndFlush(response).addListener(new GenericFutureListener<ChannelFuture>() {
 
         public void operationComplete(ChannelFuture future) {
           if (!future.isSuccess()) {
@@ -243,7 +258,7 @@ public class TcpServer extends ChannelInboundMessageHandlerAdapter<Envelope>
       Envelope response = Envelope.newBuilder()
           .setControl(control)
           .build();
-      channel.write(response).addListener(new GenericFutureListener<ChannelFuture>() {
+      channel.writeAndFlush(response).addListener(new GenericFutureListener<ChannelFuture>() {
 
         public void operationComplete(ChannelFuture future) {
           if (!future.isSuccess()) {
