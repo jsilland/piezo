@@ -41,17 +41,19 @@
         <h1>
 <a name="piezo" class="anchor" href="#piezo"><span class="octicon octicon-link"></span></a>Piezo</h1>
 
-<p>Piezo is a Java RPC stack that combines Protocol Buffers, Netty and Guava in order to provide a state-of-the-art, lightweight and reliable channel for server-to-server communication.</p>
+<p>Piezo is a Java RPC stack that combines <a href="https://code.google.com/p/protobuf/">Protocol Buffers</a>, <a href="http://netty.io/">Netty</a> and <a href="https://code.google.com/p/guava-libraries/">Guava</a> in order to provide a state-of-the-art, lightweight and reliable channel for server-to-server communication.</p>
 
 <p>Piezo is made of two components working hand in hand:</p>
 
 <ul>
 <li>A framework that implements a generic RPC transport between client and server</li>
 <li>A plugin for the Protocol Buffer compiler that generates concrete implementations of protobuf services</li>
-</ul><h2>
+</ul><p>The Javadoc for the framework is available <a href="http://jsilland.github.io/piezo/apidocs/index.html">here</a>.</p>
+
+<h2>
 <a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
 
-<p>Piezo is not yet available in Maven Central, you will have to install both the plugin and the framework manually. Both installations require a protocol buffer toolchain to be available (see Usage section).</p>
+<p>Piezo is not yet available in Maven Central, you will have to install both the plugin and the framework manually. Both installations require a protocol buffer toolchain to be available (see Usage section below).</p>
 
 <p>In <code>piezo/plugin</code>:</p>
 
@@ -102,7 +104,7 @@
 &lt;/dependencies&gt;
 </code></pre>
 
-<p>Define a protocol buffer service in a file placed under <code>src/main/proto</code>. For instance, create <code>src/main/proto/your/package/dns.proto</code> with the following contents:</p>
+<p>Define a protocol buffer service in a file placed under <code>src/main/proto</code>. In the example below, we'll take the example of a DNS service used to resolve domains names into 32-bit IPv4 addresses. Create <code>src/main/proto/your/package/dns.proto</code> with the following contents:</p>
 
 <pre><code>package your.package.dns;
 
@@ -168,7 +170,7 @@ service Dns {
 }
 </code></pre>
 
-<p>Instantiate a server and configure it to serve the DNS service:</p>
+<p>Instantiate a server and configure it to surface the DNS service:</p>
 
 <pre><code>TcpServer server = new TcpServer(10000); // the server will bind to this port
 server.serverGroup().addService(Dns.newService(new DnsService()));
