@@ -25,6 +25,7 @@ public abstract @{handler.multipleFiles ? '' : 'static'} class @{handler.service
         public String serviceName() { return "@{handler.service.name}"; }
         public String name() { return "@{method.name}"; }
         public com.google.protobuf.Parser<@{method.outputType}> outputParser() { return @{method.outputType}.PARSER; }
+        public com.google.protobuf.Message.Builder outputBuilder() { return @{method.outputType}.newBuilder(); }
       })
     @end{}
       .build();
@@ -45,6 +46,7 @@ public abstract @{handler.multipleFiles ? '' : 'static'} class @{handler.service
       .put("@{method.name}", new io.soliton.protobuf.ServerMethod<@{method.inputType}, @{method.outputType}>() {
         public String name() { return "@{method.name}"; }
         public com.google.protobuf.Parser<@{method.inputType}> inputParser() { return @{method.inputType}.PARSER; }
+        public com.google.protobuf.Message.Builder inputBuilder() { return @{method.inputType}.newBuilder(); }
         public com.google.common.util.concurrent.ListenableFuture<@{method.outputType}> invoke(@{method.inputType} request) { return implementation.@{method.javaName}(request); }
       })
     @end{}

@@ -17,6 +17,7 @@
 package io.soliton.protobuf;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
 
 /**
@@ -32,9 +33,14 @@ public interface ServerMethod<I, O> {
   public String name();
 
   /**
-   * Returns a parser capable of parsing this method's input parameter
+   * Returns a parser capable of parsing this method's input parameter.
    */
   public Parser<I> inputParser();
+
+  /**
+   * Returns a builder capable of building this method's input parameter.
+   */
+  public Message.Builder inputBuilder();
 
   /**
    * Invokes this method with the given parameter.
