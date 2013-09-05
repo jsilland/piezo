@@ -47,6 +47,9 @@ import java.util.logging.Logger;
 /**
  * Concrete implementation of a {@link Server} binding to a TCP port.
  *
+ * <p>This implementation uses a proprietary protocol for encoding method
+ * calls.</p>
+ *
  * @author Julien Silland (julien@soliton.io)
  */
 public final class TcpServer extends SimpleChannelInboundHandler<Envelope> implements Server {
