@@ -41,19 +41,30 @@
         <h1>
 <a name="piezo" class="anchor" href="#piezo"><span class="octicon octicon-link"></span></a>Piezo</h1>
 
-<p>Piezo is a Java RPC stack that combines <a href="https://code.google.com/p/protobuf/">Protocol Buffers</a>, <a href="http://netty.io/">Netty</a> and <a href="https://code.google.com/p/guava-libraries/">Guava</a> in order to provide a state-of-the-art, lightweight and reliable channel for server-to-server communication.</p>
+<p>Ever wished you could define, implement, deploy and access network services in Java? Ever wanted to do it in under 5 minutes? With Piezo, it's a simple as:</p>
+
+<ol>
+<li>Define a service in the protocol buffer IDL syntax.</li>
+<li>Implement the generated Java interface.</li>
+<li>Surface the implementations over, e.g. a vanilla TCP socket. Need to make it available to outside users? Piezo ships with a JSON-RPC implementations over HTTP.</li>
+<li>Use it right away! Getting a client stub takes all of two lines of code.</li>
+</ol><h2>
+<a name="in-more-details" class="anchor" href="#in-more-details"><span class="octicon octicon-link"></span></a>In More Details</h2>
+
+<p>Piezo is a Java RPC stack that combines <a href="https://code.google.com/p/protobuf/">Protocol Buffers</a>, <a href="http://netty.io/">Netty</a> and <a href="https://code.google.com/p/guava-libraries/">Guava</a> in order to provide a state-of-the-art, lightweight, reliable and well-performing channel for deploying and accessing network services.</p>
 
 <p>Piezo is made of two components working hand in hand:</p>
 
 <ul>
-<li>A framework that implements a generic RPC transport between client and server</li>
 <li>A plugin for the Protocol Buffer compiler that generates concrete implementations of protobuf services</li>
-</ul><p>The Javadoc for the framework is available <a href="http://jsilland.github.io/piezo/apidocs/index.html">here</a>.</p>
+<li>A framework that defines a generic RPC abstraction between client and server</li>
+<li>Implementations of clients and servers — binary/socket based or JSON-RPC/HTTP implementations are available </li>
+</ul><p>The Javadoc for the framework is available <a href="http://soliton.io/piezo/apidocs/index.html">here</a>.</p>
 
 <h2>
 <a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
 
-<p>Piezo is not yet available in Maven Central, you will have to install both the plugin and the framework manually. Both installations require a protocol buffer toolchain to be available (see Usage section below).</p>
+<p>Piezo is not yet available in Maven Central, so you'll have to install both the plugin and the framework manually. Both installations require a protocol buffer toolchain to be available (see Usage section below).</p>
 
 <p>In <code>piezo/plugin</code>:</p>
 
@@ -172,14 +183,14 @@ service Dns {
 
 <p>Instantiate a server and configure it to surface the DNS service:</p>
 
-<pre><code>TcpServer server = new TcpServer(10000); // the server will bind to this port
+<pre><code>RpcServer server = new RcpServer(10000); // the server will bind to this port
 server.serverGroup().addService(Dns.newService(new DnsService()));
 server.start();
 </code></pre>
 
 <p>On the client side, instantiate the stub by specifying to which host and port to connect. Then start using the interface as you normally would:</p>
 
-<pre><code>Client transport = new TcpClient(HostAndPort.fromParts("localhost", 10000));
+<pre><code>Client transport = new RpcClient(HostAndPort.fromParts("localhost", 10000));
 Dns.Interface client = Dns.newStub(transport);
 client.resolve("www.google.com").getIpAddress(); // 12345
 </code></pre>
