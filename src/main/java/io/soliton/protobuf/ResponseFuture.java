@@ -27,16 +27,18 @@ import com.google.protobuf.Parser;
  * received from RPC servers.
  * 
  * <p>This implementation supports executing custom logic upon a call to the
- * {@link #cancel(boolean)} method.
+ * {@link #cancel(boolean)} method.</p>
  *
  * @author Julien Silland (julien@soliton.io)
  */
 class ResponseFuture<V> extends AbstractFuture<V> {
 
+  private final long requestId;
   private final Runnable runOnCancel;
   private final Parser<V> parser;
 
-  public ResponseFuture(Runnable runOnCancel, Parser<V> parser) {
+  public ResponseFuture(long requestId, Runnable runOnCancel, Parser<V> parser) {
+    this.requestId = requestId;
     this.runOnCancel = Preconditions.checkNotNull(runOnCancel);
     this.parser = Preconditions.checkNotNull(parser);
   }
@@ -46,7 +48,11 @@ class ResponseFuture<V> extends AbstractFuture<V> {
    *
    * @param response the envelope of the response.
    */
-  public void set(Envelope response) {
+  public void setResponse(Envelope response) {
+    if (response.hasControl() && response.getControl().hasError()) {
+      setException(new Exception(response.getControl().getError()));
+      return;
+    }
     try {
       set(parser.parseFrom(response.getPayload()));
     } catch (InvalidProtocolBufferException ipbe) {
@@ -80,5 +86,9 @@ class ResponseFuture<V> extends AbstractFuture<V> {
       return true;
     }
     return false;
+  }
+
+  public long requestId() {
+    return requestId;
   }
 }

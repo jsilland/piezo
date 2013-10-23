@@ -22,8 +22,8 @@ import com.google.protobuf.Message;
 /**
  * High-level formalization of the client-side of the RPC system.
  *
- * <p>A client's responsibility is to encode a method call and send it to a
- * remote {@link Server} instance. The protocol and transport used to
+ * <p>A client's responsibility is to encode a method call and return a handle
+ * on the upcoming response from the server. The protocol and transport used to
  * accomplish this task are specific to each client-server implementation.</p>
  *
  * @author Julien Silland (julien@soliton.io)

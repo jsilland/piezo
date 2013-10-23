@@ -16,6 +16,7 @@
 
 package io.soliton.protobuf;
 
+import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
 
 /**
@@ -37,8 +38,12 @@ public interface ClientMethod<O> {
   public String name();
 
   /**
-   * Returns a parser capable of handling content for this method's return
-   * type.
+   * Returns a protocol buffer parser for this method's return type.
    */
   public Parser<O> outputParser();
+
+  /**
+   * Returns a protocol buffer builder for this method's return type.
+   */
+  public Message.Builder outputBuilder();
 }

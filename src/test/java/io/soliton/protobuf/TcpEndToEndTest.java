@@ -37,7 +37,7 @@ import java.util.concurrent.Executors;
 
 public class TcpEndToEndTest {
 
-  private static TcpServer server;
+  private static RpcServer server;
 
   private static final class TimeServer implements TimeService.Interface {
 
@@ -62,8 +62,8 @@ public class TcpEndToEndTest {
   }
 
   @BeforeClass
-  public static void setUp() {
-    server = new TcpServer(10000);
+  public static void setUp() throws Exception {
+    server = new RpcServer(10000);
     Service timeService = TimeService.newService(new TimeServer());
     Service dnsService = TestingSingleFile.Dns.newService(new DnsServer());
     server.serviceGroup().addService(timeService);
@@ -80,7 +80,7 @@ public class TcpEndToEndTest {
   public void testRequestResponseMultiFile() throws InterruptedException {
 
     TimeService.Interface client = TimeService.newStub(
-        new TcpClient(HostAndPort.fromParts("localhost", 10000)));
+        new RpcClient(HostAndPort.fromParts("localhost", 10000)));
     TimeRequest request = TimeRequest.newBuilder().setTimezone(DateTimeZone.UTC.getID()).build();
 
     final CountDownLatch latch = new CountDownLatch(1);
@@ -104,7 +104,7 @@ public class TcpEndToEndTest {
   public void testRequestResponseSingleFile() throws InterruptedException {
 
     TestingSingleFile.Dns.Interface client = TestingSingleFile.Dns.newStub(
-        new TcpClient(HostAndPort.fromParts("localhost", 10000)));
+        new RpcClient(HostAndPort.fromParts("localhost", 10000)));
     TestingSingleFile.DnsRequest request = TestingSingleFile.DnsRequest.newBuilder()
         .setDomain("Castro.local").build();
 
