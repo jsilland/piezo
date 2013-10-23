@@ -1,19 +1,31 @@
 Piezo
 =====
 
-Piezo is a Java RPC stack that combines [Protocol Buffers](https://code.google.com/p/protobuf/), [Netty](http://netty.io/) and [Guava](https://code.google.com/p/guava-libraries/) in order to provide a state-of-the-art, lightweight and reliable channel for server-to-server communication.
+Ever wished you could define, implement, deploy and access network services in Java? Ever wanted to do it in under 5 minutes? With Piezo, it's a simple as:
+
+1. Define a service in the protocol buffer IDL syntax.
+2. Implement the generated Java interface.
+3. Surface the implementations over, e.g. a vanilla TCP socket. Need to make it available to outside users? Piezo ships with a JSON-RPC implementations over HTTP.
+4. Use it right away! Getting a client stub takes all of two lines of code.
+
+
+In More Details
+---------------
+
+Piezo is a Java RPC stack that combines [Protocol Buffers](https://code.google.com/p/protobuf/), [Netty](http://netty.io/) and [Guava](https://code.google.com/p/guava-libraries/) in order to provide a state-of-the-art, lightweight, reliable and well-performing channel for deploying and accessing network services.
 
 Piezo is made of two components working hand in hand:
 
-- A framework that implements a generic RPC transport between client and server
 - A plugin for the Protocol Buffer compiler that generates concrete implementations of protobuf services
+- A framework that defines a generic RPC abstraction between client and server
+- Implementations of clients and servers — binary/socket based or JSON-RPC/HTTP implementations are available 
 
-The Javadoc for the framework is available [here](http://jsilland.github.io/piezo/apidocs/index.html).
+The Javadoc for the framework is available [here](http://soliton.io/piezo/apidocs/index.html).
 
 Installation
 ------------
 
-Piezo is not yet available in Maven Central, you will have to install both the plugin and the framework manually. Both installations require a protocol buffer toolchain to be available (see Usage section below).
+Piezo is not yet available in Maven Central, so you'll have to install both the plugin and the framework manually. Both installations require a protocol buffer toolchain to be available (see Usage section below).
 
 In `piezo/plugin`:
 
@@ -125,13 +137,13 @@ You should now be able to invoke `mvn compile` and check the generated code unde
 
 Instantiate a server and configure it to surface the DNS service:
 
-    TcpServer server = new TcpServer(10000); // the server will bind to this port
+    RpcServer server = new RcpServer(10000); // the server will bind to this port
     server.serverGroup().addService(Dns.newService(new DnsService()));
     server.start();
 
 On the client side, instantiate the stub by specifying to which host and port to connect. Then start using the interface as you normally would:
 
-    Client transport = new TcpClient(HostAndPort.fromParts("localhost", 10000));
+    Client transport = new RpcClient(HostAndPort.fromParts("localhost", 10000));
     Dns.Interface client = Dns.newStub(transport);
     client.resolve("www.google.com").getIpAddress(); // 12345
 
