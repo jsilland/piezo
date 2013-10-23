@@ -37,10 +37,14 @@ import java.util.Map;
 public class Messages {
 
   /**
+   * Non-instantiatable class
+   */
+  private Messages() { }
+
+  /**
    * Converts a proto-message into an equivalent JSON representation.
    *
    * @param output
-   * @return
    */
   public static JsonObject toJson(Message output) {
     JsonObject object = new JsonObject();
@@ -96,6 +100,12 @@ public class Messages {
     return null;
   }
 
+  /**
+   * Converts a JSON object to a protobuf message
+   *
+   * @param builder the proto message type builder
+   * @param input the JSON object to convert
+   */
   public static Message fromJson(Message.Builder builder, JsonObject input) {
     Descriptors.Descriptor descriptor = builder.getDescriptorForType();
     for (Map.Entry<String, JsonElement> entry : input.entrySet()) {

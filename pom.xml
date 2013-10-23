@@ -88,6 +88,7 @@
                         <link>https://developers.google.com/protocol-buffers/docs/reference/java</link>
                         <link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc</link>
                         <link>http://netty.io/4.0/api/</link>
+			<link>http://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/</link>
                     </links>
                     <stylesheet>java</stylesheet>
                     <bootclasspath>${sun.boot.class.path}</bootclasspath>

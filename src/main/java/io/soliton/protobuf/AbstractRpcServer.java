@@ -103,7 +103,7 @@ public abstract class AbstractRpcServer implements Server {
    * Implemented by subclasses to customize their handling of incoming
    * requests.
    *
-   * @see {@link ChannelInitializers}
+   * @see ChannelInitializers
    */
   protected abstract ChannelInitializer<? extends Channel> channelInitializer();
 }

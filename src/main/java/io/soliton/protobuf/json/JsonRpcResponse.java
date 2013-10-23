@@ -46,7 +46,6 @@ public class JsonRpcResponse {
    * @param error the error to return to the user
    * @param id the identifier of the request for which this response if
    *    generated
-   * @return
    */
   static JsonRpcResponse error(JsonRpcError error, JsonElement id) {
     return new JsonRpcResponse(id, error, null);
