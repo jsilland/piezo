@@ -16,6 +16,7 @@
 
 package io.soliton.protobuf;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.MapMaker;
 import com.google.common.util.concurrent.FutureCallback;
@@ -30,6 +31,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +43,7 @@ import java.util.logging.Logger;
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
+class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
 
   public static final Logger logger = Logger.getLogger(RpcServerHandler.class.getCanonicalName());
 
@@ -68,33 +70,38 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
       ListenableFuture<?> pending = pendingRequests.remove(request.getRequestId());
       if (pending != null) {
         boolean cancelled = pending.cancel(true);
-        context.channel().write(Envelope.newBuilder()
+        context.channel().writeAndFlush(Envelope.newBuilder()
             .setRequestId(request.getRequestId())
             .setControl(Control.newBuilder().setCancel(cancelled)).build());
       }
+      return;
     }
 
     Service service = serviceGroup.lookupByName(request.getService());
     if (service == null) {
       logger.warning(String.format(
           "Received request for unknown service %s", request.getService()));
-      context.channel().write(Envelope.newBuilder()
+      context.channel().writeAndFlush(Envelope.newBuilder()
           .setRequestId(request.getRequestId())
           .setControl(Control.newBuilder()
               .setError(String.format("Unknown service %s", request.getService())))
           .build());
+      return;
     }
 
     ServerMethod<? extends Message, ? extends Message> method =
         service.lookup(request.getMethod());
     if (method == null) {
-      context.channel().write(Envelope.newBuilder()
+      logger.warning(String.format(
+          "Received request for unknown method %s/%s", request.getService(), request.getMethod()));
+      context.channel().writeAndFlush(Envelope.newBuilder()
           .setRequestId(request.getRequestId())
           .setControl(Control.newBuilder()
               .setError(
                   String.format("Unknown method %s/%s", request.getService(),
                       request.getMethod())))
           .build());
+      return;
     }
     invoke(method, request.getPayload(), request.getRequestId(), context.channel());
   }
@@ -120,6 +127,11 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
     } catch (InvalidProtocolBufferException ipbe) {
       callback.onFailure(ipbe);
     }
+  }
+
+  @VisibleForTesting
+  Map<Long, ListenableFuture<?>> pendingRequests() {
+    return pendingRequests;
   }
 
   /**

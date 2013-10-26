@@ -29,7 +29,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponse;
-import io.soliton.protobuf.RpcClientHandler;
 
 import java.io.InputStreamReader;
 import java.util.Random;
@@ -44,7 +43,8 @@ import java.util.logging.Logger;
  */
 class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
 
-  private static final Logger logger = Logger.getLogger(RpcClientHandler.class.getCanonicalName());
+  private static final Logger logger = Logger.getLogger(
+      JsonRpcClientHandler.class.getCanonicalName());
   private static final Random RANDOM = new Random();
 
   private final ConcurrentMap<Long, JsonResponseFuture<? extends Message>> inFlightRequests =

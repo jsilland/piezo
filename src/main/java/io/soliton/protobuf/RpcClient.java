@@ -28,6 +28,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
@@ -45,31 +46,38 @@ public class RpcClient implements Client {
       RpcClient.class.getCanonicalName());
 
   private final Channel channel;
-  private final RpcClientHandler handler = new RpcClientHandler();
+  private final RpcClientHandler handler;
 
   /**
-   * Creates a new, single transport connected to the given remote host.
+   * Returns a new client connected to the specified host.
    *
-   * @param remoteAddress the coordinates of the remote host to connect to
+   * @param remoteAddress the host and port to connect to
+   * @throws IOException if the connection cannot be established
    */
-  public RpcClient(HostAndPort remoteAddress) {
+  public static RpcClient to(HostAndPort remoteAddress) throws IOException {
     Preconditions.checkNotNull(remoteAddress);
     Bootstrap bootstrap = new Bootstrap();
     bootstrap.group(new NioEventLoopGroup());
     bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
     bootstrap.channel(NioSocketChannel.class);
+    RpcClientHandler handler = new RpcClientHandler();
     bootstrap.handler(ChannelInitializers.protoBuf(Envelope.getDefaultInstance(), handler));
 
     ChannelFuture future = bootstrap.connect(remoteAddress.getHostText(), remoteAddress.getPort());
     future.awaitUninterruptibly();
     if (future.isSuccess()) {
       logger.info("Piezo client successfully connected to " + remoteAddress.toString());
-      this.channel = future.channel();
-      handler.setChannel(this.channel);
     } else {
       logger.warning("Piezo client failed to connect to " + remoteAddress.toString());
-      throw new RuntimeException(future.cause());
+      throw new IOException(future.cause());
     }
+    return new RpcClient(future.channel(), handler);
+  }
+
+  RpcClient(Channel channel, RpcClientHandler handler) {
+    this.channel = channel;
+    this.handler = handler;
+    handler.setChannel(channel);
   }
 
   /**
@@ -85,6 +93,9 @@ public class RpcClient implements Client {
         .setMethod(method.name())
         .setPayload(input.toByteString())
         .build();
+    // TODO(julien): might be nice to couple the future returned from writeAndFlush
+    // into the one returned to the user, so that calling cancel on the userland
+    // future may also cancel the outgoing request if it isn't done yet.
     channel.writeAndFlush(request).addListener(new GenericFutureListener<ChannelFuture>() {
 
       public void operationComplete(ChannelFuture future) {

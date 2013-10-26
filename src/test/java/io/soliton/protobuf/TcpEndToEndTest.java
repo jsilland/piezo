@@ -25,30 +25,19 @@ import io.soliton.protobuf.testing.TestingSingleFile;
 import io.soliton.protobuf.testing.TimeRequest;
 import io.soliton.protobuf.testing.TimeResponse;
 import io.soliton.protobuf.testing.TimeService;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 
 public class TcpEndToEndTest {
 
   private static RpcServer server;
-
-  private static final class TimeServer implements TimeService.Interface {
-
-    @Override
-    public ListenableFuture<TimeResponse> getTime(TimeRequest request) {
-      DateTimeZone timeZone = DateTimeZone.forID(request.getTimezone());
-      DateTime now = new DateTime(timeZone);
-      TimeResponse.Builder response = TimeResponse.newBuilder();
-      return Futures.immediateFuture(response.setTime(now.getMillis()).build());
-    }
-  }
 
   private static final class DnsServer implements TestingSingleFile.Dns.Interface {
 
@@ -77,10 +66,10 @@ public class TcpEndToEndTest {
   }
 
   @Test
-  public void testRequestResponseMultiFile() throws InterruptedException {
+  public void testRequestResponseMultiFile() throws InterruptedException, IOException {
 
     TimeService.Interface client = TimeService.newStub(
-        new RpcClient(HostAndPort.fromParts("localhost", 10000)));
+        RpcClient.to(HostAndPort.fromParts("localhost", 10000)));
     TimeRequest request = TimeRequest.newBuilder().setTimezone(DateTimeZone.UTC.getID()).build();
 
     final CountDownLatch latch = new CountDownLatch(1);
@@ -101,10 +90,10 @@ public class TcpEndToEndTest {
   }
 
   @Test
-  public void testRequestResponseSingleFile() throws InterruptedException {
+  public void testRequestResponseSingleFile() throws InterruptedException, IOException {
 
     TestingSingleFile.Dns.Interface client = TestingSingleFile.Dns.newStub(
-        new RpcClient(HostAndPort.fromParts("localhost", 10000)));
+        RpcClient.to(HostAndPort.fromParts("localhost", 10000)));
     TestingSingleFile.DnsRequest request = TestingSingleFile.DnsRequest.newBuilder()
         .setDomain("Castro.local").build();
 

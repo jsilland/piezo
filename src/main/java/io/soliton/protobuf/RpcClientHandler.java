@@ -16,6 +16,7 @@
 
 package io.soliton.protobuf;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapMaker;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.Message;
@@ -24,6 +25,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
@@ -34,7 +36,7 @@ import java.util.logging.Logger;
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public class RpcClientHandler extends SimpleChannelInboundHandler<Envelope> {
+class RpcClientHandler extends SimpleChannelInboundHandler<Envelope> {
 
   private static final Logger logger = Logger.getLogger(RpcClientHandler.class.getCanonicalName());
   private static final Random RANDOM = new Random();
@@ -57,7 +59,7 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<Envelope> {
     future.setResponse(response);
   }
 
-  public <O extends Message> ResponseFuture<O> newProvisionalResponse(Parser<O> outputParser) {
+  <O extends Message> ResponseFuture<O> newProvisionalResponse(Parser<O> outputParser) {
     long requestId = RANDOM.nextLong();
     ResponseFuture<O> outputFuture = new ResponseFuture<>(requestId, new Cancel(requestId),
         outputParser);
@@ -65,12 +67,17 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<Envelope> {
     return outputFuture;
   }
 
-  public ListenableFuture<? extends Message> finish(long requestId) {
+  ListenableFuture<? extends Message> finish(long requestId) {
     return inFlightRequests.remove(requestId);
   }
 
-  public void setChannel(Channel channel) {
+  void setChannel(Channel channel) {
     this.channel = channel;
+  }
+
+  @VisibleForTesting
+  Map<Long, ResponseFuture<? extends Message>> inFlightRequests() {
+    return inFlightRequests;
   }
 
   /**
@@ -92,7 +99,7 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<Envelope> {
             .setRequestId(requestId)
             .setControl(Control.newBuilder().setCancel(true))
             .build();
-        channel.write(request);
+        channel.writeAndFlush(request);
       }
     }
   }

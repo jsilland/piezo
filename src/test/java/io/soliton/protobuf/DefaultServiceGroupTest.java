@@ -21,6 +21,11 @@ import com.google.protobuf.Message;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * Tests for {@link DefaultServiceGroup}.
+ *
+ * @author Julien Silland (julien@soliton.io)
+ */
 public class DefaultServiceGroupTest {
 
   @Test
