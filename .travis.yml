@@ -3,8 +3,8 @@ jdk:
   - openjdk7
 before_install:
   - sudo add-apt-repository ppa:chris-lea/protobuf -y
-  - sudo apt-get update -y
-  - sudo apt-get install -qq protobuf
+  - sudo apt-get update
+  - sudo apt-get install protobuf -y
   - ./src/main/sh/generate_toolchains.sh
   - mvn --toolchains toolchains.xml --file plugin/pom.xml install 
 install: mvn --toolchains toolchains.xml install -DskipTests=true
