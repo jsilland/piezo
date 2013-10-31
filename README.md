@@ -1,5 +1,3 @@
-![Build status](https://travis-ci.org/jsilland/piezo.png)
-
 Piezo
 =====
 
@@ -10,6 +8,7 @@ Ever wished you could define, implement, deploy and access network services in J
 3. Surface the implementations over, e.g. a vanilla TCP socket. Need to make it available to outside users? Piezo ships with a JSON-RPC implementation over HTTP.
 4. Use it right away! Getting a client stub takes all of two lines of code.
 
+![Build status](https://travis-ci.org/jsilland/piezo.png)
 
 In More Details
 ---------------
