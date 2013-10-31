@@ -1,3 +1,5 @@
+![Build status](https://travis-ci.org/jsilland/piezo.png)
+
 Piezo
 =====
 
