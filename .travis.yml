@@ -1,0 +1,9 @@
+language: java
+jdk:
+  - openjdk7
+before_install:
+  - sudo apt-get install -qq protobuf-compiler
+  - ./src/main/sh/generate_toolchains.sh
+  - mvn --toolchains toolchains.xml --file plugin/pom.xml install 
+install: mvn --toolchains toolchains.xml install -DskipTests=true
+script: mvn --toolchains toolchains.xml test
