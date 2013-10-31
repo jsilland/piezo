@@ -29,7 +29,7 @@ import org.joda.time.DateTimeZone;
  *
  * @author Julien Silland (julien@soliton.io)
  */
-class TimeServer implements TimeService.Interface {
+public class TimeServer implements TimeService.Interface {
 
   @Override
   public ListenableFuture<TimeResponse> getTime(TimeRequest request) {

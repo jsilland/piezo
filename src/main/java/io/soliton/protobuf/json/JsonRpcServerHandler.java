@@ -97,7 +97,7 @@ final class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpRequest
 
     JsonRpcError transportError = validateTransport(request);
     if (transportError != null) {
-      JsonRpcResponse response = JsonRpcResponse.error(transportError);
+      JsonRpcResponse response = JsonRpcResponse.error(transportError, id);
       new JsonRpcCallback(id, ctx.channel(), true).onSuccess(response);
       return;
     }

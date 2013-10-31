@@ -46,4 +46,9 @@ public class DefaultServiceGroup implements ServiceGroup {
   public Service lookupByName(String name) {
     return services.get(name);
   }
+
+  @Override
+  public String toString() {
+    return services.toString();
+  }
 }

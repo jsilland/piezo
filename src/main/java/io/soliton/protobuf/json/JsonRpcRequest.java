@@ -21,10 +21,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.gson.*;
 import com.google.protobuf.Message;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.soliton.protobuf.ServerMethod;
@@ -203,7 +201,14 @@ class JsonRpcRequest {
    */
   private <I extends Message, O extends Message> ListenableFuture<JsonRpcResponse> invoke(
       ServerMethod<I, O> method, JsonObject parameter, JsonElement id) {
-    I request = (I) Messages.fromJson(method.inputBuilder(), parameter);
+    I request;
+    try {
+      request = (I) Messages.fromJson(method.inputBuilder(), parameter);
+    } catch (Exception e) {
+      SettableFuture<JsonRpcResponse> future = SettableFuture.create();
+      future.setException(e);
+      return future;
+    }
     ListenableFuture<O> response = method.invoke(request);
     return Futures.transform(response, new JsonConverter());
   }

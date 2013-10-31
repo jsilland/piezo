@@ -106,13 +106,13 @@ public class Messages {
    * @param builder the proto message type builder
    * @param input the JSON object to convert
    */
-  public static Message fromJson(Message.Builder builder, JsonObject input) {
+  public static Message fromJson(Message.Builder builder, JsonObject input) throws Exception {
     Descriptors.Descriptor descriptor = builder.getDescriptorForType();
     for (Map.Entry<String, JsonElement> entry : input.entrySet()) {
       String protoName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entry.getKey());
       Descriptors.FieldDescriptor field = descriptor.findFieldByName(protoName);
       if (field == null) {
-        // fail;
+        throw new Exception("Can't find descriptor for field " + protoName);
       }
       if (field.isRepeated()) {
         if (!entry.getValue().isJsonArray()) {
@@ -130,7 +130,7 @@ public class Messages {
   }
 
   private static Object parseField(Descriptors.FieldDescriptor field, JsonElement value,
-      Message.Builder enclosingBuilder) {
+      Message.Builder enclosingBuilder) throws Exception {
     switch (field.getType()) {
       case DOUBLE:
         if (!value.isJsonPrimitive()) {
@@ -175,7 +175,7 @@ public class Messages {
         if (!value.isJsonObject()) {
           // fail
         }
-        return fromJson(enclosingBuilder.getFieldBuilder(field), value.getAsJsonObject());
+        return fromJson(enclosingBuilder.newBuilderForField(field), value.getAsJsonObject());
       case BYTES:
         if (!value.isJsonPrimitive()) {
           // fail

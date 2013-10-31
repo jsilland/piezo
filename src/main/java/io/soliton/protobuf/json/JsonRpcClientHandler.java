@@ -16,6 +16,7 @@
 
 package io.soliton.protobuf.json;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.MapMaker;
 import com.google.gson.JsonElement;
@@ -121,5 +122,10 @@ class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
    */
   void finish(long requestId) {
     inFlightRequests.remove(requestId);
+  }
+
+  @VisibleForTesting
+  ConcurrentMap<Long, JsonResponseFuture<? extends Message>> inFlightRequests() {
+    return inFlightRequests;
   }
 }

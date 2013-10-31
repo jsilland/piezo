@@ -61,10 +61,9 @@ public class HttpJsonRpcClient implements Client {
       .generateNonExecutableJson()
       .create();
 
-  private final HostAndPort remoteAddress;
-  private final String rpcPath;
   private final Channel channel;
-  private final JsonRpcClientHandler handler = new JsonRpcClientHandler();
+  private final JsonRpcClientHandler handler;
+  private final String rpcPath;
 
   /**
    * Exhaustive constructor.
@@ -74,24 +73,41 @@ public class HttpJsonRpcClient implements Client {
    * @param remoteAddress the address of the remote server
    * @param rpcPath the path of the RPC endpoint on the remote server
    */
-  public HttpJsonRpcClient(HostAndPort remoteAddress, String rpcPath) {
-    this.remoteAddress = Preconditions.checkNotNull(remoteAddress);
-    this.rpcPath = Preconditions.checkNotNull(rpcPath);
+  public static HttpJsonRpcClient to(HostAndPort remoteAddress, String rpcPath) throws IOException {
+    Preconditions.checkNotNull(remoteAddress);
+    Preconditions.checkNotNull(rpcPath);
     Bootstrap bootstrap = new Bootstrap();
     bootstrap.group(new NioEventLoopGroup());
     bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
     bootstrap.channel(NioSocketChannel.class);
+    JsonRpcClientHandler handler = new JsonRpcClientHandler();
     bootstrap.handler(ChannelInitializers.httpClient(handler));
 
     ChannelFuture future = bootstrap.connect(remoteAddress.getHostText(), remoteAddress.getPort());
     future.awaitUninterruptibly();
     if (future.isSuccess()) {
       logger.info("Piezo client successfully connected to " + remoteAddress.toString());
-      this.channel = future.channel();
     } else {
       logger.warning("Piezo client failed to connect to " + remoteAddress.toString());
-      throw new RuntimeException(future.cause());
+      throw new IOException(future.cause());
     }
+    return new HttpJsonRpcClient(future.channel(), handler, rpcPath);
+  }
+
+  /**
+   * Exhaustive constructor.
+   *
+   * <p>This constructor connects synchronously to the specified server.</p>
+   *
+   * @param channel the connection to the remote server
+   * @param handler the hand;er in charge of receiving server responses
+   * @param rpcPath the path of the RPC endpoint on the remote server
+   */
+  public HttpJsonRpcClient(Channel channel, JsonRpcClientHandler handler,
+      String rpcPath) {
+    this.channel = channel;
+    this.handler = handler;
+    this.rpcPath = rpcPath;
   }
 
   @Override

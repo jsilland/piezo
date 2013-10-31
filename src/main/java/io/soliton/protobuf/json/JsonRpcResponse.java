@@ -107,7 +107,7 @@ public class JsonRpcResponse {
       result = response.get(JsonRpcProtocol.RESULT).getAsJsonObject();
     }
 
-    if (id == null) {
+    if (id == null && error == null) {
       error = new JsonRpcError(HttpResponseStatus.INTERNAL_SERVER_ERROR,
           "Missing response identifier");
     }

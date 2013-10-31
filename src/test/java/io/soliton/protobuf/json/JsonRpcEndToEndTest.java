@@ -37,6 +37,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * End-to-end test for the JSON-RPC stack.
+ *
+ * @author Julien Silland (julien@soliton.io)
+ */
 public class JsonRpcEndToEndTest {
 
   private static HttpJsonRpcServer server;
@@ -115,7 +120,7 @@ public class JsonRpcEndToEndTest {
 //    Assert.assertNotNull(resultObject.get("time"));
 
     TimeService.Interface client = TimeService.newStub(
-        new HttpJsonRpcClient(HostAndPort.fromParts("localhost", 10000), "/rpc"));
+        HttpJsonRpcClient.to(HostAndPort.fromParts("localhost", 10000), "/rpc"));
     TimeRequest request = TimeRequest.newBuilder().setTimezone(DateTimeZone.UTC.getID()).build();
     final CountDownLatch latch = new CountDownLatch(1);
     Futures.addCallback(client.getTime(request), new FutureCallback<TimeResponse>() {
@@ -177,7 +182,7 @@ public class JsonRpcEndToEndTest {
 //    Assert.assertEquals(1234567, resultObject.get("ipAddress").getAsInt());
 
     TestingSingleFile.Dns.Interface client = TestingSingleFile.Dns.newStub(
-        new HttpJsonRpcClient(HostAndPort.fromParts("localhost", 10000), "/rpc"));
+        HttpJsonRpcClient.to(HostAndPort.fromParts("localhost", 10000), "/rpc"));
     TestingSingleFile.DnsRequest request = TestingSingleFile.DnsRequest.newBuilder()
         .setDomain("www.soliton.io").build();
     final CountDownLatch latch = new CountDownLatch(1);

@@ -9,12 +9,49 @@
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
 
+    <name>Piezo</name>
+    <description>Piezo is an RPC framework</description>
+
+    <url>http://soliton.io/piezo</url>
+
+    <scm>
+        <connection>scm:git:https://github.com/jsilland/piezo.git</connection>
+        <url>scm:git:https://github.com/jsilland/piezo.git</url>
+        <developerConnection>scm:git:https://github.com/jsilland/pizeo.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>jsilland</id>
+            <name>Julien Silland</name>
+            <email>julien@soliton.io</email>
+            <roles>
+                <role>maintainer</role>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>-8</timezone>
+            <properties>
+                <picUrl>https://secure.gravatar.com/avatar/e62d7d65c924ae20cfd70edf051b9e8d</picUrl>
+            </properties>
+        </developer>
+    </developers>
+
     <pluginRepositories>
         <pluginRepository>
             <id>protoc-plugin</id>
             <url>http://sergei-ivanov.github.com/maven-protoc-plugin/repo/releases/</url>
         </pluginRepository>
     </pluginRepositories>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -88,7 +125,7 @@
                         <link>https://developers.google.com/protocol-buffers/docs/reference/java</link>
                         <link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc</link>
                         <link>http://netty.io/4.0/api/</link>
-			<link>http://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/</link>
+			            <link>http://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/</link>
                     </links>
                     <stylesheet>java</stylesheet>
                     <bootclasspath>${sun.boot.class.path}</bootclasspath>
@@ -106,8 +143,29 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <mavenExecutorId>forked-path</mavenExecutorId>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Nexus Release repository</name>
+            <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>http://oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
@@ -165,4 +223,34 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.4</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
