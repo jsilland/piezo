@@ -2,7 +2,7 @@ language: java
 jdk:
   - openjdk7
 before_install:
-  - sudo add-apt-repository ppa:chris-lea/protobuf
+  - sudo add-apt-repository ppa:chris-lea/protobuf -y
   - sudo apt-get install -qq protobuf
   - ./src/main/sh/generate_toolchains.sh
   - mvn --toolchains toolchains.xml --file plugin/pom.xml install 
