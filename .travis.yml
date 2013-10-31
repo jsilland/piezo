@@ -2,10 +2,9 @@ language: java
 jdk:
   - openjdk7
 before_install:
-  - sudo deb http://ppa.launchpad.net/chris-lea/protobuf/ubuntu precise main
-  - sudo deb-src http://ppa.launchpad.net/chris-lea/protobuf/ubuntu precise main
+  - sudo add-apt-repository ppa:chris-lea/protobuf -y
   - sudo apt-get update
-  - sudo apt-get install protobuf -y
+  - sudo apt-get install protobuf-compiler=2.5.0-1chl1~precise1 -y
   - ./src/main/sh/generate_toolchains.sh
   - mvn --toolchains toolchains.xml --file plugin/pom.xml install 
 install: mvn --toolchains toolchains.xml install -DskipTests=true
