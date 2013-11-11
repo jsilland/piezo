@@ -16,6 +16,11 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.ClientMethod;
+import io.soliton.protobuf.NullClientLogger;
+import io.soliton.protobuf.testing.TimeRequest;
+import io.soliton.protobuf.testing.TimeResponse;
+
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -25,9 +30,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.DefaultChannelPromise;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.util.concurrent.ImmediateEventExecutor;
-import io.soliton.protobuf.ClientMethod;
-import io.soliton.protobuf.testing.TimeRequest;
-import io.soliton.protobuf.testing.TimeResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -53,7 +55,8 @@ public class HttpJsonRpcClientTest {
     Mockito.when(success.isSuccess()).thenReturn(true);
     Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(success);
     JsonRpcClientHandler handler = new JsonRpcClientHandler();
-    HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc");
+    HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc",
+        new NullClientLogger());
 
     ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
     Mockito.when(method.serviceName()).thenReturn("TimeService");
@@ -82,7 +85,8 @@ public class HttpJsonRpcClientTest {
     Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(failure);
 
     JsonRpcClientHandler handler = new JsonRpcClientHandler();
-    HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc");
+    HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc",
+        new NullClientLogger());
 
     ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
     Mockito.when(method.serviceName()).thenReturn("TimeService");

@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-package io.soliton.protobuf;
+package io.soliton.protobuf.socket;
+
+import io.soliton.protobuf.AbstractRpcServer;
+import io.soliton.protobuf.ChannelInitializers;
+import io.soliton.protobuf.Envelope;
+import io.soliton.protobuf.NullServerLogger;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -22,8 +27,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 /**
- * Simple implementation of {@link Server} using a TCP transport.
- *
+ * Simple implementation of {@link io.soliton.protobuf.Server} using a TCP transport.
+ * <p/>
  * <p>This server uses a proprietary binary protocol to communicate with
  * instances of {@link RpcClient}.</p>
  *
@@ -42,6 +47,6 @@ public class RpcServer extends AbstractRpcServer {
 
   protected ChannelInitializer<? extends Channel> channelInitializer() {
     return ChannelInitializers.protoBuf(Envelope.getDefaultInstance(),
-        new RpcServerHandler(serviceGroup()));
+        new RpcServerHandler(serviceGroup(), new NullServerLogger()));
   }
 }

@@ -16,10 +16,13 @@
 
 package io.soliton.protobuf;
 
+import io.soliton.protobuf.testing.TimeResponse;
+
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.protobuf.Message.Builder;
+import com.google.protobuf.Parser;
 import io.netty.channel.Channel;
-import io.soliton.protobuf.testing.TimeResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -30,19 +33,56 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for {@link RpcClientHandler}
+ * Tests for {@link io.soliton.protobuf.EnvelopeClientHandler}
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public class RpcClientHandlerTest {
+public class EnvelopeClientHandlerTest {
+
+  private static class IdentityEnvelopeClientHandler extends EnvelopeClientHandler<Envelope,
+      Envelope> {
+
+    @Override
+    public Envelope convertRequest(Envelope request) {
+      return request;
+    }
+
+    @Override
+    public Envelope convertResponse(Envelope response) throws ResponseConversionException {
+      return response;
+    }
+  }
+
+  private static final ClientMethod<TimeResponse> CLIENT_METHOD = new ClientMethod<TimeResponse>() {
+    @Override
+    public String serviceName() {
+      return null;
+    }
+
+    @Override
+    public String name() {
+      return null;
+    }
+
+    @Override
+    public Parser<TimeResponse> outputParser() {
+      return TimeResponse.PARSER;
+    }
+
+    @Override
+    public Builder outputBuilder() {
+      return null;
+    }
+  };
 
   @Test
   public void testProvisionAndCancel() {
-    RpcClientHandler handler = new RpcClientHandler();
+    EnvelopeClientHandler handler = new IdentityEnvelopeClientHandler();
 
     Channel channel = Mockito.mock(Channel.class);
     handler.setChannel(channel);
-    ResponseFuture<TimeResponse> future = handler.newProvisionalResponse(TimeResponse.PARSER);
+    handler.setClientLogger(new NullClientLogger());
+    EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(CLIENT_METHOD);
     future.cancel(true);
 
     ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
@@ -57,8 +97,9 @@ public class RpcClientHandlerTest {
 
   @Test
   public void testReceiveResponse() throws Exception {
-    RpcClientHandler handler = new RpcClientHandler();
-    ResponseFuture<TimeResponse> future = handler.newProvisionalResponse(TimeResponse.PARSER);
+    EnvelopeClientHandler handler = new IdentityEnvelopeClientHandler();
+    handler.setClientLogger(new NullClientLogger());
+    EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(CLIENT_METHOD);
 
     final CountDownLatch latch = new CountDownLatch(1);
     FutureCallback<TimeResponse> callback = new FutureCallback<TimeResponse>() {

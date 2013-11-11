@@ -25,7 +25,7 @@ import org.junit.Test;
 public class JavaTypeTest {
 
   @Test
-   public void testNullPackage() {
+  public void testNullPackage() {
     JavaType type = new JavaType(null, "B", "C");
     Assert.assertEquals("B.C", type.toString());
   }

@@ -16,15 +16,16 @@
 
 package io.soliton.protobuf;
 
+import io.soliton.protobuf.testing.TimeRequest;
+import io.soliton.protobuf.testing.TimeResponse;
+import io.soliton.protobuf.testing.TimeService;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.soliton.protobuf.testing.TimeRequest;
-import io.soliton.protobuf.testing.TimeResponse;
-import io.soliton.protobuf.testing.TimeService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -36,11 +37,28 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for {@link RpcServerHandler}
+ * Tests for {@link io.soliton.protobuf.EnvelopeServerHandler}
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public class RpcServerHandlerTest {
+public class EnvelopeServerHandlerTest {
+
+  private static class IdentityServerHandler extends EnvelopeServerHandler<Envelope, Envelope> {
+
+    public IdentityServerHandler(ServiceGroup services, ServerLogger serverLogger) {
+      super(services, serverLogger);
+    }
+
+    @Override
+    protected Envelope convertRequest(Envelope request) {
+      return request;
+    }
+
+    @Override
+    protected Envelope convertResponse(Envelope response) {
+      return response;
+    }
+  }
 
   @Test
   public void testNormalExecution() throws Exception {
@@ -58,28 +76,28 @@ public class RpcServerHandlerTest {
     final CountDownLatch latch = new CountDownLatch(1);
     final ServerMethod<TimeRequest, TimeResponse> serverMethod =
         new ServerMethod<TimeRequest, TimeResponse>() {
-      @Override
-      public String name() {
-        return null;
-      }
+          @Override
+          public String name() {
+            return null;
+          }
 
-      @Override
-      public Parser<TimeRequest> inputParser() {
-        return TimeRequest.PARSER;
-      }
+          @Override
+          public Parser<TimeRequest> inputParser() {
+            return TimeRequest.PARSER;
+          }
 
-      @Override
-      public Message.Builder inputBuilder() {
-        return null;
-      }
+          @Override
+          public Message.Builder inputBuilder() {
+            return null;
+          }
 
-      @Override
-      public ListenableFuture<TimeResponse> invoke(TimeRequest request) {
-        Assert.assertEquals("UTC", request.getTimezone());
-        latch.countDown();
-        return SettableFuture.create();
-      }
-    };
+          @Override
+          public ListenableFuture<TimeResponse> invoke(TimeRequest request) {
+            Assert.assertEquals("UTC", request.getTimezone());
+            latch.countDown();
+            return SettableFuture.create();
+          }
+        };
 
     Answer<ServerMethod<TimeRequest, TimeResponse>> answer = new Answer<ServerMethod
         <TimeRequest, TimeResponse>>() {
@@ -96,7 +114,7 @@ public class RpcServerHandlerTest {
     Mockito.when(service.lookup(Mockito.anyString())).thenAnswer(answer);
     ServiceGroup services = new DefaultServiceGroup();
     services.addService(service);
-    RpcServerHandler handler = new RpcServerHandler(services);
+    EnvelopeServerHandler handler = new IdentityServerHandler(services, new NullServerLogger());
 
     handler.channelRead0(context, request);
 
@@ -158,7 +176,7 @@ public class RpcServerHandlerTest {
     Mockito.when(service.lookup(Mockito.anyString())).thenAnswer(answer);
     ServiceGroup services = new DefaultServiceGroup();
     services.addService(service);
-    RpcServerHandler handler = new RpcServerHandler(services);
+    EnvelopeServerHandler handler = new IdentityServerHandler(services, new NullServerLogger());
 
     handler.channelRead0(context, request);
 
@@ -189,10 +207,11 @@ public class RpcServerHandlerTest {
     ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
     Mockito.when(context.channel()).thenReturn(channel);
 
-    RpcServerHandler handler = new RpcServerHandler(new DefaultServiceGroup());
+    EnvelopeServerHandler handler = new IdentityServerHandler(
+        new DefaultServiceGroup(), new NullServerLogger());
     handler.channelRead0(context, request);
 
-    ArgumentCaptor <Object> captor = ArgumentCaptor.forClass(Object.class);
+    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
     Mockito.verify(channel).writeAndFlush(captor.capture());
 
     Object captured = captor.getValue();
@@ -218,10 +237,10 @@ public class RpcServerHandlerTest {
     ServiceGroup services = new DefaultServiceGroup();
     services.addService(timeService);
 
-    RpcServerHandler handler = new RpcServerHandler(services);
+    EnvelopeServerHandler handler = new IdentityServerHandler(services, new NullServerLogger());
     handler.channelRead0(context, request);
 
-    ArgumentCaptor <Object> captor = ArgumentCaptor.forClass(Object.class);
+    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
     Mockito.verify(channel).writeAndFlush(captor.capture());
 
     Object captured = captor.getValue();

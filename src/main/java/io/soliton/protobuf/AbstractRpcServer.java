@@ -30,6 +30,8 @@ import java.util.logging.Logger;
 /**
  * Provides a default implementation of {@link Server} which binds to a TCP
  * port.
+ *
+ * @author Julien Silland (julien@soliton.io)
  */
 public abstract class AbstractRpcServer implements Server {
 
@@ -60,7 +62,7 @@ public abstract class AbstractRpcServer implements Server {
 
   /**
    * Starts this server.
-   *
+   * <p/>
    * <p>This is a synchronous operation.</p>
    */
   public void start() throws Exception {
@@ -84,7 +86,7 @@ public abstract class AbstractRpcServer implements Server {
 
   /**
    * Stops this server.
-   *
+   * <p/>
    * <p>This is a synchronous operation.</p>
    */
   public void stop() {

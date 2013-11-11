@@ -16,6 +16,8 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.ClientLogger;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.MapMaker;
@@ -50,10 +52,11 @@ class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
 
   private final ConcurrentMap<Long, JsonResponseFuture<? extends Message>> inFlightRequests =
       new MapMaker().makeMap();
+  private ClientLogger clientLogger;
 
   @Override
   protected void channelRead0(ChannelHandlerContext channelHandlerContext,
-        HttpResponse response) throws Exception {
+      HttpResponse response) throws Exception {
     if (!(response instanceof HttpContent)) {
       logger.severe("Returned response has no content");
       return;
@@ -127,5 +130,9 @@ class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
   @VisibleForTesting
   ConcurrentMap<Long, JsonResponseFuture<? extends Message>> inFlightRequests() {
     return inFlightRequests;
+  }
+
+  public void setClientLogger(ClientLogger clientLogger) {
+    this.clientLogger = clientLogger;
   }
 }

@@ -16,6 +16,8 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.Server;
+
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.Futures;
 import com.google.gson.JsonElement;
@@ -24,8 +26,12 @@ import com.google.gson.JsonSyntaxException;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.*;
-import io.soliton.protobuf.Server;
+import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.QueryStringDecoder;
 
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -119,18 +125,18 @@ final class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpRequest
   /**
    * In charge of validating all the transport-related aspects of the incoming
    * HTTP request.
-   *
+   * <p/>
    * <p>The checks include:</p>
-   *
+   * <p/>
    * <ul>
-   *   <li>that the request's path matches that of this handler;</li>
-   *   <li>that the request's method is {@code POST};</li>
-   *   <li>that the request's content-type is {@code application/json};</li>
+   * <li>that the request's path matches that of this handler;</li>
+   * <li>that the request's method is {@code POST};</li>
+   * <li>that the request's content-type is {@code application/json};</li>
    * </ul>
    *
    * @param request the received HTTP request
    * @return {@code null} if the request passes the transport checks, an error
-   *    to return to the client otherwise.
+   *         to return to the client otherwise.
    * @throws URISyntaxException if the URI of the request cannot be parsed
    */
   private JsonRpcError validateTransport(HttpRequest request) throws URISyntaxException,

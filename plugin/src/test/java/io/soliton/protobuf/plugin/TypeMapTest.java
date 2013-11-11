@@ -18,6 +18,7 @@ package io.soliton.protobuf.plugin;
 
 import io.soliton.protobuf.plugin.testing.TestingMultiFile;
 import io.soliton.protobuf.plugin.testing.TestingOneFile;
+
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -16,9 +16,12 @@
 
 package io.soliton.protobuf;
 
+import io.soliton.protobuf.testing.TimeResponse;
+
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import io.soliton.protobuf.testing.TimeResponse;
+import com.google.protobuf.Message.Builder;
+import com.google.protobuf.Parser;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,11 +30,33 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for {@link ResponseFuture}.
+ * Tests for {@link EnvelopeFuture}.
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public class ResponseFutureTest {
+public class EnvelopeFutureTest {
+
+  private static final ClientMethod<TimeResponse> CLIENT_METHOD = new ClientMethod<TimeResponse>() {
+    @Override
+    public String serviceName() {
+      return null;
+    }
+
+    @Override
+    public String name() {
+      return null;
+    }
+
+    @Override
+    public Parser<TimeResponse> outputParser() {
+      return TimeResponse.PARSER;
+    }
+
+    @Override
+    public Builder outputBuilder() {
+      return null;
+    }
+  };
 
   @Test
   public void testRequestId() {
@@ -40,7 +65,8 @@ public class ResponseFutureTest {
         // noop
       }
     };
-    ResponseFuture<TimeResponse> future = new ResponseFuture<>(1L, cancel, TimeResponse.PARSER);
+    EnvelopeFuture<TimeResponse> future = new EnvelopeFuture<>(1L, CLIENT_METHOD, cancel,
+        new NullClientLogger());
     Assert.assertEquals(1L, future.requestId());
   }
 
@@ -63,7 +89,8 @@ public class ResponseFutureTest {
         Assert.fail();
       }
     };
-    ResponseFuture<TimeResponse > future = new ResponseFuture<>(1L, cancel, TimeResponse.PARSER);
+    EnvelopeFuture<TimeResponse> future = new EnvelopeFuture<>(1L, CLIENT_METHOD, cancel,
+        new NullClientLogger());
     Envelope response = Envelope.newBuilder()
         .setPayload(TimeResponse.newBuilder().setTime(12345L).build().toByteString())
         .build();
@@ -92,7 +119,8 @@ public class ResponseFutureTest {
         latch.countDown();
       }
     };
-    ResponseFuture<TimeResponse > future = new ResponseFuture<>(1L, cancel, TimeResponse.PARSER);
+    EnvelopeFuture<TimeResponse> future = new EnvelopeFuture<>(1L, CLIENT_METHOD, cancel,
+        new NullClientLogger());
     Control control = Control.newBuilder()
         .setError("OMGWTF")
         .build();
@@ -112,7 +140,8 @@ public class ResponseFutureTest {
         latch.countDown();
       }
     };
-    ResponseFuture<TimeResponse > future = new ResponseFuture<>(1L, cancel, TimeResponse.PARSER);
+    EnvelopeFuture<TimeResponse> future = new EnvelopeFuture<>(1L, CLIENT_METHOD, cancel,
+        new NullClientLogger());
     future.cancel(true);
     latch.await(5, TimeUnit.SECONDS);
   }

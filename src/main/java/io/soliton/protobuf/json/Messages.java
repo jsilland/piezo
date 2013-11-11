@@ -39,7 +39,8 @@ public class Messages {
   /**
    * Non-instantiatable class
    */
-  private Messages() { }
+  private Messages() {
+  }
 
   /**
    * Converts a proto-message into an equivalent JSON representation.

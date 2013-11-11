@@ -22,7 +22,7 @@ import com.google.protobuf.Message;
 /**
  * Represents a handle on the result of the invocation of a method over
  * JSON-RPC.
- *
+ * <p/>
  * <p>This implementation is in charge of marshalling the response received
  * from the server into the expected protobuf type.</p>
  *

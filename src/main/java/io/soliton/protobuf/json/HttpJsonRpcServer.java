@@ -16,19 +16,20 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.AbstractRpcServer;
+import io.soliton.protobuf.ChannelInitializers;
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.soliton.protobuf.AbstractRpcServer;
-import io.soliton.protobuf.ChannelInitializers;
 
 /**
  * Concrete {@link io.soliton.protobuf.Server} implementation surfacing the
  * registered services over an HTTP transport using the JSON-RPC protocol.
  *
- * @see <a href="http://json-rpc.org/">JSON-RPC</a>
  * @author Julien Silland (julien@soliton.io)
+ * @see <a href="http://json-rpc.org/">JSON-RPC</a>
  */
 public class HttpJsonRpcServer extends AbstractRpcServer {
 
