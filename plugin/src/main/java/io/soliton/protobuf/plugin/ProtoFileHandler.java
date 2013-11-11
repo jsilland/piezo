@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Julien Silland
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,22 +29,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- *
- *
  * @author Julien Silland (julien@soliton.io)
  */
 public class ProtoFileHandler {
 
-	private final TypeMap types;
+  private final TypeMap types;
   private final OutputStream output;
-	
-	public ProtoFileHandler(TypeMap types, OutputStream output) {
-		this.types = Preconditions.checkNotNull(types);
+
+  public ProtoFileHandler(TypeMap types, OutputStream output) {
+    this.types = Preconditions.checkNotNull(types);
     this.output = Preconditions.checkNotNull(output);
-	}
-	
-	public void handle(FileDescriptorProto protoFile) throws IOException {
-		String javaPackage = inferJavaPackage(protoFile);
+  }
+
+  public void handle(FileDescriptorProto protoFile) throws IOException {
+    String javaPackage = inferJavaPackage(protoFile);
     boolean multipleFiles = protoFile.getOptions().getJavaMultipleFiles();
     String outerClassName = null;
     if (!multipleFiles) {
@@ -54,19 +52,19 @@ public class ProtoFileHandler {
         outerClassName = inferOuterClassName(protoFile);
       }
     }
-		ProtoServiceHandler serviceHandler = new ProtoServiceHandler(javaPackage, types,
+    ProtoServiceHandler serviceHandler = new ProtoServiceHandler(javaPackage, types,
         multipleFiles, outerClassName, output);
-		for (ServiceDescriptorProto service : protoFile.getServiceList()) {
-			serviceHandler.handle(service);
-		}
-	}
+    for (ServiceDescriptorProto service : protoFile.getServiceList()) {
+      serviceHandler.handle(service);
+    }
+  }
 
   @VisibleForTesting
-	static String inferJavaPackage(FileDescriptorProto file) {
-		FileOptions options = file.getOptions();
-		return options.hasJavaPackage() ?
-				options.getJavaPackage() : file.hasPackage() ? file.getPackage() : null;
-	}
+  static String inferJavaPackage(FileDescriptorProto file) {
+    FileOptions options = file.getOptions();
+    return options.hasJavaPackage() ?
+        options.getJavaPackage() : file.hasPackage() ? file.getPackage() : null;
+  }
 
   @VisibleForTesting
   static String inferOuterClassName(FileDescriptorProto file) {

@@ -16,6 +16,12 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.ChannelInitializers;
+import io.soliton.protobuf.Client;
+import io.soliton.protobuf.ClientLogger;
+import io.soliton.protobuf.ClientMethod;
+import io.soliton.protobuf.NullClientLogger;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;
@@ -35,11 +41,13 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.QueryStringEncoder;
 import io.netty.util.concurrent.GenericFutureListener;
-import io.soliton.protobuf.ChannelInitializers;
-import io.soliton.protobuf.Client;
-import io.soliton.protobuf.ClientMethod;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -49,8 +57,8 @@ import java.util.logging.Logger;
  * Implementation of an RPC client that encodes method calls using the JSON-RPC
  * protocol over an HTTP transport.
  *
- * @see <a href="http://json-rpc.org/">JSON-RPC</a>
  * @author Julien Silland (julien@soliton.io)
+ * @see <a href="http://json-rpc.org/">JSON-RPC</a>
  */
 public class HttpJsonRpcClient implements Client {
 
@@ -64,34 +72,16 @@ public class HttpJsonRpcClient implements Client {
   private final Channel channel;
   private final JsonRpcClientHandler handler;
   private final String rpcPath;
+  private final ClientLogger clientLogger;
 
   /**
-   * Exhaustive constructor.
+   * Returns a new builder for configuring a client connecting to the given
+   * remote address.
    *
-   * <p>This constructor connects synchronously to the specified server.</p>
-   *
-   * @param remoteAddress the address of the remote server
-   * @param rpcPath the path of the RPC endpoint on the remote server
+   * @param remoteAddress the address of the server to connect to.
    */
-  public static HttpJsonRpcClient to(HostAndPort remoteAddress, String rpcPath) throws IOException {
-    Preconditions.checkNotNull(remoteAddress);
-    Preconditions.checkNotNull(rpcPath);
-    Bootstrap bootstrap = new Bootstrap();
-    bootstrap.group(new NioEventLoopGroup());
-    bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
-    bootstrap.channel(NioSocketChannel.class);
-    JsonRpcClientHandler handler = new JsonRpcClientHandler();
-    bootstrap.handler(ChannelInitializers.httpClient(handler));
-
-    ChannelFuture future = bootstrap.connect(remoteAddress.getHostText(), remoteAddress.getPort());
-    future.awaitUninterruptibly();
-    if (future.isSuccess()) {
-      logger.info("Piezo client successfully connected to " + remoteAddress.toString());
-    } else {
-      logger.warning("Piezo client failed to connect to " + remoteAddress.toString());
-      throw new IOException(future.cause());
-    }
-    return new HttpJsonRpcClient(future.channel(), handler, rpcPath);
+  public static Builder newClient(HostAndPort remoteAddress) {
+    return new Builder(remoteAddress);
   }
 
   /**
@@ -100,19 +90,22 @@ public class HttpJsonRpcClient implements Client {
    * <p>This constructor connects synchronously to the specified server.</p>
    *
    * @param channel the connection to the remote server
-   * @param handler the hand;er in charge of receiving server responses
+   * @param handler the handler in charge of receiving server responses
    * @param rpcPath the path of the RPC endpoint on the remote server
+   * @param clientLogger the monitoring logger to notify of events
    */
-  public HttpJsonRpcClient(Channel channel, JsonRpcClientHandler handler,
-      String rpcPath) {
+  HttpJsonRpcClient(Channel channel, JsonRpcClientHandler handler,
+      String rpcPath, ClientLogger clientLogger) {
     this.channel = channel;
     this.handler = handler;
     this.rpcPath = rpcPath;
+    this.clientLogger = clientLogger;
   }
 
   @Override
-  public <O extends Message> ListenableFuture<O> encodeMethodCall(ClientMethod<O> method,
+  public <O extends Message> ListenableFuture<O> encodeMethodCall(final ClientMethod<O> method,
       Message input) {
+    clientLogger.logMethodCall(method);
     final JsonResponseFuture<O> responseFuture =
         handler.newProvisionalResponse(method.outputBuilder());
 
@@ -139,6 +132,7 @@ public class HttpJsonRpcClient implements Client {
 
       public void operationComplete(ChannelFuture future) {
         if (!future.isSuccess()) {
+          clientLogger.logClientError(method, future.cause());
           handler.finish(responseFuture.requestId());
           responseFuture.setException(future.cause());
         }
@@ -147,5 +141,48 @@ public class HttpJsonRpcClient implements Client {
     });
 
     return responseFuture;
+  }
+
+  public static final class Builder {
+
+    private final HostAndPort remoteAddress;
+    private String rpcPath = "/rpc";
+    private ClientLogger clientLogger = new NullClientLogger();
+
+    private Builder(HostAndPort remoteAddress) {
+      this.remoteAddress = Preconditions.checkNotNull(remoteAddress);
+    }
+
+    public Builder setRpcPath(String rpcPath) {
+      Preconditions.checkNotNull(rpcPath);
+      Preconditions.checkArgument(rpcPath.startsWith("/"));
+      this.rpcPath = rpcPath;
+      return this;
+    }
+
+    public Builder setClientLogger(ClientLogger clientLogger) {
+      this.clientLogger = Preconditions.checkNotNull(clientLogger);
+      return this;
+    }
+
+    public HttpJsonRpcClient build() throws IOException {
+      Bootstrap bootstrap = new Bootstrap();
+      bootstrap.group(new NioEventLoopGroup());
+      bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
+      bootstrap.channel(NioSocketChannel.class);
+      JsonRpcClientHandler handler = new JsonRpcClientHandler();
+      handler.setClientLogger(clientLogger);
+      bootstrap.handler(ChannelInitializers.httpClient(handler));
+
+      ChannelFuture future = bootstrap.connect(remoteAddress.getHostText(), remoteAddress.getPort());
+      future.awaitUninterruptibly();
+      if (future.isSuccess()) {
+        logger.info("Piezo client successfully connected to " + remoteAddress.toString());
+      } else {
+        logger.warning("Piezo client failed to connect to " + remoteAddress.toString());
+        throw new IOException(future.cause());
+      }
+      return new HttpJsonRpcClient(future.channel(), handler, rpcPath, clientLogger);
+    }
   }
 }

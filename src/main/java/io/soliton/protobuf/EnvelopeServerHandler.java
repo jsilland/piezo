@@ -17,6 +17,7 @@
 package io.soliton.protobuf;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.MapMaker;
 import com.google.common.util.concurrent.FutureCallback;
@@ -38,21 +39,25 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 /**
- * Handler implementing the decoding and dispatching of RPC calls in
- * an {@link RpcServer}.
+ * Shared server-side handler implementation for servers whose method calls
+ * are encoded using an {@link Envelope} message.
  *
+ * @param <I> The incoming request type in which the RPC envelope is encoded
+ * @param <O> The outgoing response type in which the RPC envelope will be encoded
  * @author Julien Silland (julien@soliton.io)
  */
-class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
+public abstract class EnvelopeServerHandler<I, O> extends SimpleChannelInboundHandler<I> {
 
-  public static final Logger logger = Logger.getLogger(RpcServerHandler.class.getCanonicalName());
+  public static final Logger logger = Logger.getLogger(
+      EnvelopeServerHandler.class.getCanonicalName());
 
   private final ConcurrentMap<Long, ListenableFuture<?>> pendingRequests = new MapMaker().makeMap();
-  private final ServiceGroup serviceGroup;
   private final ExecutorService responseCallbackExecutor = Executors.newCachedThreadPool();
 
-  RpcServerHandler(ServiceGroup serviceGroup) {
-    this.serviceGroup = serviceGroup;
+  private final ServiceGroup services;
+
+  public EnvelopeServerHandler(ServiceGroup services) {
+    this.services = Preconditions.checkNotNull(services);
   }
 
   /**
@@ -63,47 +68,52 @@ class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
-  protected void channelRead0(ChannelHandlerContext context, Envelope request)
+  public void channelRead0(ChannelHandlerContext context, I request)
       throws Exception {
-    if (request.hasControl() && request.getControl().getCancel()) {
-      ListenableFuture<?> pending = pendingRequests.remove(request.getRequestId());
+    Envelope envelope = convertRequest(request);
+    if (envelope.hasControl() && envelope.getControl().getCancel()) {
+      ListenableFuture<?> pending = pendingRequests.remove(envelope.getRequestId());
       if (pending != null) {
         boolean cancelled = pending.cancel(true);
         context.channel().writeAndFlush(Envelope.newBuilder()
-            .setRequestId(request.getRequestId())
+            .setRequestId(envelope.getRequestId())
             .setControl(Control.newBuilder().setCancel(cancelled)).build());
       }
       return;
     }
 
-    Service service = serviceGroup.lookupByName(request.getService());
+    Service service = services.lookupByName(envelope.getService());
     if (service == null) {
       logger.warning(String.format(
-          "Received request for unknown service %s", request.getService()));
+          "Received request for unknown service %s", envelope.getService()));
       context.channel().writeAndFlush(Envelope.newBuilder()
-          .setRequestId(request.getRequestId())
+          .setRequestId(envelope.getRequestId())
           .setControl(Control.newBuilder()
-              .setError(String.format("Unknown service %s", request.getService())))
+              .setError(String.format("Unknown service %s", envelope.getService())))
           .build());
       return;
     }
 
     ServerMethod<? extends Message, ? extends Message> method =
-        service.lookup(request.getMethod());
+        service.lookup(envelope.getMethod());
     if (method == null) {
       logger.warning(String.format(
-          "Received request for unknown method %s/%s", request.getService(), request.getMethod()));
+          "Received request for unknown method %s/%s", envelope.getService(),
+          envelope.getMethod()));
       context.channel().writeAndFlush(Envelope.newBuilder()
-          .setRequestId(request.getRequestId())
+          .setRequestId(envelope.getRequestId())
           .setControl(Control.newBuilder()
               .setError(
-                  String.format("Unknown method %s/%s", request.getService(),
-                      request.getMethod())))
+                  String.format("Unknown method %s/%s", envelope.getService(),
+                      envelope.getMethod())))
           .build());
       return;
     }
-    invoke(method, request.getPayload(), request.getRequestId(), context.channel());
+    invoke(method, envelope.getPayload(), envelope.getRequestId(), context.channel());
   }
 
   /**
@@ -118,7 +128,7 @@ class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
    */
   private <I extends Message, O extends Message> void invoke(
       ServerMethod<I, O> method, ByteString payload, long requestId, Channel channel) {
-    FutureCallback<O> callback = new ServerMethodCallback<>(requestId, channel);
+    FutureCallback<O> callback = new ServerMethodCallback<O>(requestId, channel);
     try {
       I request = method.inputParser().parseFrom(payload);
       ListenableFuture<O> result = method.invoke(request);
@@ -130,17 +140,33 @@ class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
   }
 
   @VisibleForTesting
-  Map<Long, ListenableFuture<?>> pendingRequests() {
+  public Map<Long, ListenableFuture<?>> pendingRequests() {
     return pendingRequests;
   }
 
   /**
-   * Encapsulates the logic to execute upon when the invocation of a service
+   * Implemented by subclasses to convert the incoming request into an
+   * {@link Envelope}
+   *
+   * @param request the incoming request
+   */
+  protected abstract Envelope convertRequest(I request) throws RequestConversionException;
+
+  /**
+   * Implemented by subclasses to convert an outgoing response into their
+   * specific output type
+   *
+   * @param response the response to be converted into the output type
+   */
+  protected abstract O convertResponse(Envelope response);
+
+  /**
+   * Encapsulates the logic to execute when the invocation of a service
    * method is done.
    *
-   * @param <O> the method's return type
+   * @param <M> the method's return type
    */
-  private class ServerMethodCallback<O extends Message> implements FutureCallback<O> {
+  private class ServerMethodCallback<M extends Message> implements FutureCallback<M> {
 
     private final long requestId;
     private final Channel channel;
@@ -154,22 +180,26 @@ class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
      * {@inheritDoc}
      */
     @Override
-    public void onSuccess(O result) {
+    public void onSuccess(M result) {
       pendingRequests.remove(requestId);
       Envelope response = Envelope.newBuilder()
           .setPayload(result.toByteString())
           .setRequestId(requestId)
           .build();
-      channel.writeAndFlush(response).addListener(new GenericFutureListener<ChannelFuture>() {
 
-        public void operationComplete(ChannelFuture future) {
-          if (!future.isSuccess()) {
-            logger.warning(String.format(
-                "Failed to respond to client on %s ", channel.remoteAddress().toString()));
-          }
-        }
+      channel.writeAndFlush(convertResponse(response)).addListener(
+          new GenericFutureListener<ChannelFuture>() {
 
-      });
+            public void operationComplete(ChannelFuture future) {
+              if (!future.isSuccess()) {
+                logger.warning(String.format(
+                    "Failed to respond to client on %s ", channel.remoteAddress().toString()));
+              } else {
+                logger.info("Successfully responded to client");
+              }
+            }
+
+          });
     }
 
     /**
@@ -177,7 +207,7 @@ class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
      */
     @Override
     public void onFailure(Throwable throwable) {
-      logger.info("Responding with client failure");
+      logger.info("Responding to client with failure");
       pendingRequests.remove(requestId);
       Control control = Control.newBuilder()
           .setError(Throwables.getStackTraceAsString(throwable))
@@ -185,17 +215,50 @@ class RpcServerHandler extends SimpleChannelInboundHandler<Envelope> {
       Envelope response = Envelope.newBuilder()
           .setControl(control)
           .build();
-      channel.writeAndFlush(response).addListener(new GenericFutureListener<ChannelFuture>() {
+      channel.writeAndFlush(convertResponse(response))
+          .addListener(new GenericFutureListener<ChannelFuture>() {
 
-        public void operationComplete(ChannelFuture future) {
-          if (!future.isSuccess()) {
-            logger.warning(String.format(
-                "Failed to respond to client on %s ", channel.remoteAddress().toString()));
-          }
-        }
+            public void operationComplete(ChannelFuture future) {
+              if (!future.isSuccess()) {
+                logger.warning(String.format(
+                    "Failed to respond to client on %s ", channel.remoteAddress().toString()));
+              }
+            }
 
-      });
+          });
     }
 
+  }
+
+  /**
+   * Occurs when an incoming request couldn't be converted into an envelope.
+   */
+  protected static class RequestConversionException extends Exception {
+    private final Object request;
+
+    /**
+     * Exhaustive constructor.
+     *
+     * @param request the request that couldn't be converted
+     */
+    public RequestConversionException(Object request) {
+      this.request = request;
+    }
+
+    /**
+     * Exhaustive constructor.
+     *
+     * @param request the request that couldn't be converted
+     * @param exception the underlying exception
+     */
+    public RequestConversionException(Object request, Throwable exception) {
+      super(exception);
+      this.request = request;
+    }
+
+    @Override
+    public String getMessage() {
+      return String.format("Could not convert incoming request: %s", request);
+    }
   }
 }

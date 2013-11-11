@@ -16,18 +16,22 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.ServerMethod;
+import io.soliton.protobuf.Service;
+import io.soliton.protobuf.ServiceGroup;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.protobuf.Message;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.soliton.protobuf.ServerMethod;
-import io.soliton.protobuf.Service;
-import io.soliton.protobuf.ServiceGroup;
 
 import java.util.Iterator;
 
@@ -166,7 +170,7 @@ class JsonRpcRequest {
    * Executes this request asynchronously.
    *
    * @param services the context of defined services in which this request is
-   *    executing
+   * executing
    * @return a handle on the future result of the invocation
    */
   public ListenableFuture<JsonRpcResponse> invoke(ServiceGroup services) {

@@ -16,16 +16,23 @@
 
 package io.soliton.protobuf.json;
 
-import com.google.api.client.http.*;
+import io.soliton.protobuf.Service;
+import io.soliton.protobuf.TimeServer;
+import io.soliton.protobuf.testing.TimeService;
+
+import com.google.api.client.http.ByteArrayContent;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpContent;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpStatusCodes;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import io.soliton.protobuf.Service;
-import io.soliton.protobuf.TimeServer;
-import io.soliton.protobuf.testing.TimeService;
 import org.joda.time.DateTimeZone;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -48,7 +55,7 @@ public class HttpJsonRpcServerTest {
   private static HttpJsonRpcServer server;
 
   private static int findAvailablePort() throws IOException {
-    ServerSocket socket= new ServerSocket(0);
+    ServerSocket socket = new ServerSocket(0);
     port = socket.getLocalPort();
     socket.close();
     return port;
@@ -104,7 +111,7 @@ public class HttpJsonRpcServerTest {
   @Test
   public void testMissingBody() throws IOException {
     HttpContent httpContent = new ByteArrayContent("application/json",
-        new byte[] {});
+        new byte[]{});
 
     GenericUrl url = new GenericUrl();
     url.setScheme("http");

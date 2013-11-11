@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package io.soliton.protobuf;
+package io.soliton.protobuf.socket;
+
+import io.soliton.protobuf.Envelope;
+import io.soliton.protobuf.EnvelopeFuture;
+import io.soliton.protobuf.NullClientLogger;
+import io.soliton.protobuf.testing.TimeResponse;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.netty.channel.Channel;
-import io.soliton.protobuf.testing.TimeResponse;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -30,7 +34,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for {@link RpcClientHandler}
+ * Tests for {@link io.soliton.protobuf.socket.RpcClientHandler}
  *
  * @author Julien Silland (julien@soliton.io)
  */
@@ -42,7 +46,8 @@ public class RpcClientHandlerTest {
 
     Channel channel = Mockito.mock(Channel.class);
     handler.setChannel(channel);
-    ResponseFuture<TimeResponse> future = handler.newProvisionalResponse(TimeResponse.PARSER);
+    handler.setClientLogger(new NullClientLogger());
+    EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(TimeResponse.PARSER);
     future.cancel(true);
 
     ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
@@ -58,7 +63,8 @@ public class RpcClientHandlerTest {
   @Test
   public void testReceiveResponse() throws Exception {
     RpcClientHandler handler = new RpcClientHandler();
-    ResponseFuture<TimeResponse> future = handler.newProvisionalResponse(TimeResponse.PARSER);
+    handler.setClientLogger(new NullClientLogger());
+    EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(TimeResponse.PARSER);
 
     final CountDownLatch latch = new CountDownLatch(1);
     FutureCallback<TimeResponse> callback = new FutureCallback<TimeResponse>() {

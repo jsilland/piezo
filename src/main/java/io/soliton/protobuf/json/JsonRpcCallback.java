@@ -26,7 +26,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -37,7 +41,7 @@ import java.io.OutputStreamWriter;
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public class JsonRpcCallback implements FutureCallback<JsonRpcResponse> {
+class JsonRpcCallback implements FutureCallback<JsonRpcResponse> {
 
   private static final Gson GSON_PP = new GsonBuilder()
       .disableHtmlEscaping()
@@ -79,7 +83,7 @@ public class JsonRpcCallback implements FutureCallback<JsonRpcResponse> {
       // Deliberately ignored, no I/O is involved
     }
     FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-          HttpResponseStatus.OK, responseBuffer);
+        HttpResponseStatus.OK, responseBuffer);
     httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, "application/json");
     httpResponse.headers().set(HttpHeaders.Names.CONTENT_LENGTH, responseBuffer.readableBytes());
     channel.writeAndFlush(httpResponse);

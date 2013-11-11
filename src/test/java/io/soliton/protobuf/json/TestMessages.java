@@ -16,10 +16,11 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.testing.All;
+
 import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
-import io.soliton.protobuf.testing.All;
 import org.junit.Assert;
 import org.junit.Test;
 

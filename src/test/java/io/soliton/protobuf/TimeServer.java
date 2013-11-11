@@ -16,11 +16,12 @@
 
 package io.soliton.protobuf;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import io.soliton.protobuf.testing.TimeRequest;
 import io.soliton.protobuf.testing.TimeResponse;
 import io.soliton.protobuf.testing.TimeService;
+
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 

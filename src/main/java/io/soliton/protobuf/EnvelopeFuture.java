@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Julien Silland
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,23 +24,26 @@ import com.google.protobuf.Parser;
 
 /**
  * A implementation of {@link ListenableFuture} tailored to handle responses
- * received from RPC servers.
- * 
+ * encoded as an {@link Envelope} message.
+ * <p/>
  * <p>This implementation supports executing custom logic upon a call to the
  * {@link #cancel(boolean)} method.</p>
  *
  * @author Julien Silland (julien@soliton.io)
  */
-class ResponseFuture<V> extends AbstractFuture<V> {
+public class EnvelopeFuture<V> extends AbstractFuture<V> {
 
   private final long requestId;
   private final Runnable runOnCancel;
   private final Parser<V> parser;
+  private final ClientLogger clientLogger;
 
-  public ResponseFuture(long requestId, Runnable runOnCancel, Parser<V> parser) {
+  public EnvelopeFuture(long requestId, Runnable runOnCancel, Parser<V> parser,
+      ClientLogger clientLogger) {
     this.requestId = requestId;
     this.runOnCancel = Preconditions.checkNotNull(runOnCancel);
     this.parser = Preconditions.checkNotNull(parser);
+    this.clientLogger = Preconditions.checkNotNull(clientLogger);
   }
 
   /**
@@ -72,7 +75,8 @@ class ResponseFuture<V> extends AbstractFuture<V> {
    * {@inheritDoc}
    */
   @Override
-  protected boolean setException(Throwable throwable) {
+  public boolean setException(Throwable throwable) {
+    clientLogger.logServerError(throwable);
     return super.setException(throwable);
   }
 

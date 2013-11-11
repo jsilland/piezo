@@ -8,20 +8,6 @@ message Control {
 	optional string error = 2;
 }
 
-message Request {
-	optional int64 request_id = 1;
-	optional string service = 2;
-	optional string method = 3;
-	optional bytes payload = 4;
-	optional Control control = 5;
-}
-
-message Response {
-	optional int64 request_id = 1;
-	optional bytes payload = 2;
-	optional Control control= 3;
-}
-
 message Envelope {
 	optional int64 request_id = 1;
 	optional string service = 2;

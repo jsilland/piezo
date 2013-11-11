@@ -14,7 +14,18 @@
  * limitations under the License.
  */
 
-package io.soliton.protobuf;
+package io.soliton.protobuf.socket;
+
+import io.soliton.protobuf.Control;
+import io.soliton.protobuf.DefaultServiceGroup;
+import io.soliton.protobuf.Envelope;
+import io.soliton.protobuf.ServerMethod;
+import io.soliton.protobuf.Service;
+import io.soliton.protobuf.ServiceGroup;
+import io.soliton.protobuf.TimeServer;
+import io.soliton.protobuf.testing.TimeRequest;
+import io.soliton.protobuf.testing.TimeResponse;
+import io.soliton.protobuf.testing.TimeService;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -22,9 +33,6 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Parser;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.soliton.protobuf.testing.TimeRequest;
-import io.soliton.protobuf.testing.TimeResponse;
-import io.soliton.protobuf.testing.TimeService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -36,7 +44,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for {@link RpcServerHandler}
+ * Tests for {@link io.soliton.protobuf.socket.RpcServerHandler}
  *
  * @author Julien Silland (julien@soliton.io)
  */
@@ -58,28 +66,28 @@ public class RpcServerHandlerTest {
     final CountDownLatch latch = new CountDownLatch(1);
     final ServerMethod<TimeRequest, TimeResponse> serverMethod =
         new ServerMethod<TimeRequest, TimeResponse>() {
-      @Override
-      public String name() {
-        return null;
-      }
+          @Override
+          public String name() {
+            return null;
+          }
 
-      @Override
-      public Parser<TimeRequest> inputParser() {
-        return TimeRequest.PARSER;
-      }
+          @Override
+          public Parser<TimeRequest> inputParser() {
+            return TimeRequest.PARSER;
+          }
 
-      @Override
-      public Message.Builder inputBuilder() {
-        return null;
-      }
+          @Override
+          public Message.Builder inputBuilder() {
+            return null;
+          }
 
-      @Override
-      public ListenableFuture<TimeResponse> invoke(TimeRequest request) {
-        Assert.assertEquals("UTC", request.getTimezone());
-        latch.countDown();
-        return SettableFuture.create();
-      }
-    };
+          @Override
+          public ListenableFuture<TimeResponse> invoke(TimeRequest request) {
+            Assert.assertEquals("UTC", request.getTimezone());
+            latch.countDown();
+            return SettableFuture.create();
+          }
+        };
 
     Answer<ServerMethod<TimeRequest, TimeResponse>> answer = new Answer<ServerMethod
         <TimeRequest, TimeResponse>>() {
@@ -192,7 +200,7 @@ public class RpcServerHandlerTest {
     RpcServerHandler handler = new RpcServerHandler(new DefaultServiceGroup());
     handler.channelRead0(context, request);
 
-    ArgumentCaptor <Object> captor = ArgumentCaptor.forClass(Object.class);
+    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
     Mockito.verify(channel).writeAndFlush(captor.capture());
 
     Object captured = captor.getValue();
@@ -221,7 +229,7 @@ public class RpcServerHandlerTest {
     RpcServerHandler handler = new RpcServerHandler(services);
     handler.channelRead0(context, request);
 
-    ArgumentCaptor <Object> captor = ArgumentCaptor.forClass(Object.class);
+    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
     Mockito.verify(channel).writeAndFlush(captor.capture());
 
     Object captured = captor.getValue();

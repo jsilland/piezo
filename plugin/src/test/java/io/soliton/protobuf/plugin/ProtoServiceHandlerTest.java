@@ -16,6 +16,9 @@
 
 package io.soliton.protobuf.plugin;
 
+import io.soliton.protobuf.plugin.testing.SearchRequest;
+import io.soliton.protobuf.plugin.testing.TestingOneFile;
+
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -23,11 +26,16 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.compiler.PluginProtos;
-import com.sun.source.tree.*;
+import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ParameterizedTypeTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
 import com.sun.tools.javac.api.JavacTool;
-import io.soliton.protobuf.plugin.testing.SearchRequest;
-import io.soliton.protobuf.plugin.testing.TestingOneFile;
 import org.junit.Assert;
 import org.junit.Test;
 

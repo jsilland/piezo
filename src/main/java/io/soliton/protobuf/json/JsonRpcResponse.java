@@ -45,7 +45,7 @@ public class JsonRpcResponse {
    *
    * @param error the error to return to the user
    * @param id the identifier of the request for which this response if
-   *    generated
+   * generated
    */
   static JsonRpcResponse error(JsonRpcError error, JsonElement id) {
     return new JsonRpcResponse(id, error, null);
@@ -56,7 +56,7 @@ public class JsonRpcResponse {
    *
    * @param payload the object to return to the user.
    * @param id the identifier of the request for which this response is
-   *    generated
+   * generated
    */
   public static JsonRpcResponse success(JsonObject payload, JsonElement id) {
     return new JsonRpcResponse(id, null, payload);

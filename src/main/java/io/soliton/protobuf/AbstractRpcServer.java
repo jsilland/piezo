@@ -60,7 +60,7 @@ public abstract class AbstractRpcServer implements Server {
 
   /**
    * Starts this server.
-   *
+   * <p/>
    * <p>This is a synchronous operation.</p>
    */
   public void start() throws Exception {
@@ -84,7 +84,7 @@ public abstract class AbstractRpcServer implements Server {
 
   /**
    * Stops this server.
-   *
+   * <p/>
    * <p>This is a synchronous operation.</p>
    */
   public void stop() {

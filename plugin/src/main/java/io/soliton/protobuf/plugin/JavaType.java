@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Julien Silland
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
  */
 public class JavaType {
 
-	private static final Joiner DOT = Joiner.on('.').skipNulls();
+  private static final Joiner DOT = Joiner.on('.').skipNulls();
 
   private final String javaPackage;
   private final String enclosingClass;
@@ -41,14 +41,14 @@ public class JavaType {
    * @param enclosingClass the type's enclosing class, may be {@code null}
    * @param className the type's name
    */
-	public JavaType(@Nullable String javaPackage, @Nullable String enclosingClass, String className) {
-		this.className = Preconditions.checkNotNull(className);
+  public JavaType(@Nullable String javaPackage, @Nullable String enclosingClass, String className) {
+    this.className = Preconditions.checkNotNull(className);
     this.javaPackage = javaPackage;
     this.enclosingClass = enclosingClass;
-	}
-	
-	@Override
-	public String toString() {
-		return DOT.join(javaPackage, enclosingClass, className);
-	}
+  }
+
+  @Override
+  public String toString() {
+    return DOT.join(javaPackage, enclosingClass, className);
+  }
 }
