@@ -17,7 +17,7 @@
     <scm>
         <url>https://github.com/jsilland/piezo</url>
         <connection>scm:git:git://github.com/jsilland/piezo.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/jsilland/pizeo.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@github.com/jsilland/piezo.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
