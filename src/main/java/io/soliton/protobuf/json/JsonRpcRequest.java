@@ -23,6 +23,7 @@ import io.soliton.protobuf.ServiceGroup;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -33,7 +34,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.protobuf.Message;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
-import java.util.Iterator;
+import java.util.List;
 
 /**
  * Structured representation of a JSON-RPC request.
@@ -149,20 +150,36 @@ class JsonRpcRequest {
     }
 
     JsonObject parameter = paramElement.getAsJsonObject();
-    Iterator<String> serviceAndMethod = DOT_SPLITTER.split(methodName.getAsString()).iterator();
+    List<String> serviceAndMethod = Lists.newArrayList(DOT_SPLITTER.split(
+        methodName.getAsString()));
 
-    if (!serviceAndMethod.hasNext()) {
+
+    String methodNameString = methodName.getAsString();
+    int dotIndex = methodNameString.lastIndexOf('.');
+
+    if (dotIndex < 0) {
       throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
           "'method' property is not properly formatted");
     }
 
-    String service = serviceAndMethod.next();
-    if (!serviceAndMethod.hasNext()) {
+    if (dotIndex == methodNameString.length() - 1) {
       throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
           "'method' property is not properly formatted");
     }
 
-    String method = serviceAndMethod.next();
+    String service = methodNameString.substring(0, dotIndex);
+    String method = methodNameString.substring(dotIndex + 1);
+
+    if (service.isEmpty() || method.isEmpty()) {
+      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+          "'method' property is not properly formatted");
+    }
+
+    if (serviceAndMethod.size() < 2) {
+      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+          "'method' property is not properly formatted");
+    }
+
     return new JsonRpcRequest(service, method, id, parameter);
   }
 

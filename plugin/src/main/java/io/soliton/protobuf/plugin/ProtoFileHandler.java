@@ -53,7 +53,7 @@ public class ProtoFileHandler {
       }
     }
     ProtoServiceHandler serviceHandler = new ProtoServiceHandler(javaPackage, types,
-        multipleFiles, outerClassName, output);
+        multipleFiles, outerClassName, protoFile.getPackage(), output);
     for (ServiceDescriptorProto service : protoFile.getServiceList()) {
       serviceHandler.handle(service);
     }

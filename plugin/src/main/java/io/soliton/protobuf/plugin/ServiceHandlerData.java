@@ -23,15 +23,21 @@ public class ServiceHandlerData {
   public static class Service {
 
     private final String name;
+    private final String fullName;
     private final ImmutableList<Method> methods;
 
-    Service(String name, ImmutableList<Method> methods) {
+    Service(String name, String fullName, ImmutableList<Method> methods) {
       this.name = name;
+      this.fullName = fullName;
       this.methods = methods;
     }
 
     public String getName() {
       return name;
+    }
+
+    public String getFullName() {
+      return fullName;
     }
 
     public ImmutableList<Method> getMethods() {

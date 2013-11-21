@@ -10,7 +10,7 @@ public abstract @{handler.multipleFiles ? '' : 'static'} class @{handler.service
   public String shortName() { return "@{handler.service.name}"; }
 
   @Override
-  public String fullName() { return "@{handler.service.name}"; }
+  public String fullName() { return "@{handler.service.fullName}"; }
 
   public static interface Interface {
     @foreach{method : handler.service.methods}
@@ -22,7 +22,7 @@ public abstract @{handler.multipleFiles ? '' : 'static'} class @{handler.service
     final com.google.common.collect.ImmutableMap<String, io.soliton.protobuf.ClientMethod<? extends com.google.protobuf.Message>> methods = com.google.common.collect.ImmutableMap.<String, io.soliton.protobuf.ClientMethod<? extends com.google.protobuf.Message>>builder()
     @foreach{method : handler.service.methods}
       .put("@{method.name}",  new io.soliton.protobuf.ClientMethod<@{method.outputType}>() {
-        public String serviceName() { return "@{handler.service.name}"; }
+        public String serviceName() { return "@{handler.service.fullName}"; }
         public String name() { return "@{method.name}"; }
         public com.google.protobuf.Parser<@{method.outputType}> outputParser() { return @{method.outputType}.PARSER; }
         public com.google.protobuf.Message.Builder outputBuilder() { return @{method.outputType}.newBuilder(); }

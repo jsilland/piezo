@@ -89,7 +89,7 @@ public class ProtoServiceHandlerTest {
     TypeMap types = TypeMap.of(protoFile);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     ProtoServiceHandler serviceHandler = new ProtoServiceHandler(
-        "io.soliton.protobuf.plugin.testing", types, true, null, output);
+        "io.soliton.protobuf.plugin.testing", types, true, null, null, output);
     serviceHandler.handle(protoFile.getServiceList().get(0));
 
     // Parsing code generation result
@@ -199,7 +199,7 @@ public class ProtoServiceHandlerTest {
     TypeMap types = TypeMap.of(protoFile);
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     ProtoServiceHandler serviceHandler = new ProtoServiceHandler(
-        "io.soliton.protobuf.plugin.testing", types, false, "TestingOneFile", output);
+        "io.soliton.protobuf.plugin.testing", types, false, "TestingOneFile", "foo.bar", output);
     serviceHandler.handle(protoFile.getServiceList().get(0));
 
     // Parsing code generation result

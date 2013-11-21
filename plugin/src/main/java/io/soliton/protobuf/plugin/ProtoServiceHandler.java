@@ -18,6 +18,7 @@ package io.soliton.protobuf.plugin;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,14 +43,16 @@ public class ProtoServiceHandler {
   private final TypeMap types;
   private final boolean multipleFiles;
   private final String outerClassName;
+  private final String protoPackage;
   private final OutputStream output;
 
   public ProtoServiceHandler(String javaPackage, TypeMap types, boolean multipleFiles,
-      String outerClassName, OutputStream output) {
+      String outerClassName, String protoPackage, OutputStream output) {
     this.javaPackage = javaPackage;
     this.types = Preconditions.checkNotNull(types);
     this.multipleFiles = multipleFiles;
     this.outerClassName = multipleFiles ? null : Preconditions.checkNotNull(outerClassName);
+    this.protoPackage = protoPackage;
     this.output = Preconditions.checkNotNull(output);
   }
 
@@ -64,8 +67,10 @@ public class ProtoServiceHandler {
       methods.add(methodData);
     }
 
+    String fullName = Joiner.on('.').skipNulls().join(protoPackage, service.getName());
+
     ServiceHandlerData.Service serviceData = new ServiceHandlerData.Service(
-        service.getName(), methods.build());
+        service.getName(), fullName, methods.build());
     ServiceHandlerData data = new ServiceHandlerData(javaPackage, multipleFiles, serviceData);
 
     String template = Resources.toString(Resources.getResource(this.getClass(),
