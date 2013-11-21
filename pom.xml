@@ -100,7 +100,7 @@
             <plugin>
                 <groupId>com.google.protobuf.tools</groupId>
                 <artifactId>maven-protoc-plugin</artifactId>
-                <version>0.3.1</version>
+                <version>0.3.2</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
