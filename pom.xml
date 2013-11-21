@@ -116,7 +116,7 @@
                                     <id>piezo-plugin</id>
                                     <groupId>io.soliton</groupId>
                                     <artifactId>piezo-plugin</artifactId>
-                                    <version>1.0-SNAPSHOT</version>
+                                    <version>1.0</version>
                                     <mainClass>io.soliton.protobuf.plugin.PiezoPlugin</mainClass>
                                 </protocPlugin>
                             </protocPlugins>
