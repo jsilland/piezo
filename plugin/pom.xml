@@ -5,7 +5,7 @@
 
     <groupId>io.soliton</groupId>
     <artifactId>piezo-plugin</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
 
     <name>Piezo plugin</name>
     <description>Protoc plugin for Piezo</description>
@@ -16,7 +16,7 @@
         <url>https://github.com/jsilland/piezo</url>
         <connection>scm:git:git://github.com/jsilland/piezo.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jsilland/piezo.git</developerConnection>
-        <tag>piezo-plugin-1.0.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
