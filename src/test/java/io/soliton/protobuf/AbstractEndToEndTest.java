@@ -31,6 +31,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -67,20 +68,23 @@ public abstract class AbstractEndToEndTest {
     TimeService.Interface timeClient = TimeService.newStub(client());
     TimeRequest request = TimeRequest.newBuilder().setTimezone(DateTimeZone.UTC.getID()).build();
 
-    final CountDownLatch latch = new CountDownLatch(1);
-    Futures.addCallback(timeClient.getTime(request), new FutureCallback<TimeResponse>() {
-      @Override
-      public void onSuccess(TimeResponse result) {
-        Assert.assertTrue(result.getTime() > 0);
-        latch.countDown();
-      }
+    ExecutorService callbackExecutor = Executors.newCachedThreadPool();
+    final CountDownLatch latch = new CountDownLatch(100);
+    for (int i = 0; i < 100; i++) {
+      Futures.addCallback(timeClient.getTime(request), new FutureCallback<TimeResponse>() {
+        @Override
+        public void onSuccess(TimeResponse result) {
+          Assert.assertTrue(result.getTime() > 0);
+          latch.countDown();
+        }
 
-      @Override
-      public void onFailure(Throwable throwable) {
-        Throwables.propagate(throwable);
-        latch.countDown();
-      }
-    }, Executors.newCachedThreadPool());
+        @Override
+        public void onFailure(Throwable throwable) {
+          Throwables.propagate(throwable);
+          latch.countDown();
+        }
+      }, callbackExecutor);
+    }
     Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
   }
 
@@ -93,21 +97,24 @@ public abstract class AbstractEndToEndTest {
     TestingSingleFile.DnsRequest request = TestingSingleFile.DnsRequest.newBuilder()
         .setDomain("Castro.local").build();
 
-    final CountDownLatch latch = new CountDownLatch(1);
-    Futures.addCallback(client.resolve(request),
-        new FutureCallback<TestingSingleFile.DnsResponse>() {
-          @Override
-          public void onSuccess(TestingSingleFile.DnsResponse result) {
-            Assert.assertEquals(1234567, result.getIpAddress());
-            latch.countDown();
-          }
+    ExecutorService callbackExecutor = Executors.newCachedThreadPool();
+    final CountDownLatch latch = new CountDownLatch(100);
+    for (int i = 0; i < 100; i++) {
+      Futures.addCallback(client.resolve(request),
+          new FutureCallback<TestingSingleFile.DnsResponse>() {
+            @Override
+            public void onSuccess(TestingSingleFile.DnsResponse result) {
+              Assert.assertEquals(1234567, result.getIpAddress());
+              latch.countDown();
+            }
 
-          @Override
-          public void onFailure(Throwable throwable) {
-            Throwables.propagate(throwable);
-            latch.countDown();
-          }
-        }, Executors.newCachedThreadPool());
+            @Override
+            public void onFailure(Throwable throwable) {
+              Throwables.propagate(throwable);
+              latch.countDown();
+            }
+          }, callbackExecutor);
+    }
     Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
   }
 }
