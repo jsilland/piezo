@@ -26,6 +26,7 @@ import io.soliton.protobuf.NullClientLogger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.Message;
 import io.netty.bootstrap.Bootstrap;
@@ -40,6 +41,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
@@ -56,10 +58,11 @@ public class QuartzClient implements Client {
   private final QuartzClientHandler handler;
   private final String path;
   private final ClientLogger clientLogger;
+  private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 
   /**
-   * Returns a new builder for quartz clients configured to connect to the
-   * remote server.
+   * Returns a new builder for quartz clients, configured to connect to the
+   * specified remote server.
    *
    * @param remoteAddress the address of the server to connect to
    */
@@ -74,10 +77,9 @@ public class QuartzClient implements Client {
    * @param handler the client-side handler in charge of handling responses
    * @param path the path of the quartz endpoint on the remote server
    * @param clientLogger the logger to use for monitoring client-side
-   * operations
    */
-  QuartzClient(Channel channel, QuartzClientHandler handler,
-      String path, ClientLogger clientLogger) {
+  QuartzClient(Channel channel, QuartzClientHandler handler, String path,
+      ClientLogger clientLogger) {
     this.channel = channel;
     this.handler = handler;
     this.path = path;
@@ -93,6 +95,9 @@ public class QuartzClient implements Client {
   @Override
   public <O extends Message> ListenableFuture<O> encodeMethodCall(final ClientMethod<O> method,
       Message input) {
+    if (isShuttingDown.get()) {
+      return Futures.immediateFailedFuture(new RuntimeException("Client is closed"));
+    }
     clientLogger.logMethodCall(method);
     final EnvelopeFuture<O> output = handler.newProvisionalResponse(method);
     Envelope request = Envelope.newBuilder()
@@ -116,6 +121,17 @@ public class QuartzClient implements Client {
     });
 
     return output;
+  }
+
+  /**
+   * Shuts down this client and releases the underlying associated resources.
+   *
+   * <p>This operation is synchronous.</p>
+   */
+  public void close() {
+    isShuttingDown.set(true);
+    channel.close().awaitUninterruptibly();
+    channel.eventLoop().shutdownGracefully().awaitUninterruptibly();
   }
 
   /**

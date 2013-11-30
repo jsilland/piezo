@@ -1,0 +1,16 @@
+package soliton.piezo.time;
+
+option java_package = "io.soliton.time";
+option java_multiple_files = false;
+
+message TimeRequest {
+  optional string timezone = 1;
+}
+
+message TimeResponse {
+  optional int64 time = 1;
+}
+
+service TimeService {
+  rpc GetTime (TimeRequest) returns (TimeResponse);
+}
