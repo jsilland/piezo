@@ -57,13 +57,14 @@ class QuartzClientHandler extends EnvelopeClientHandler<HttpRequest, HttpRespons
       request.writeTo(outputStream);
       outputStream.flush();
     } catch (IOException e) {
-      // deliberately ignored, as the underlying operations doesn't involve I/O
+      // deliberately ignored, as the underlying operation doesn't involve I/O
     }
 
-    QueryStringEncoder encoder = new QueryStringEncoder(path);
+    String uriPath = String.format("%s%s/%s", path, request.getService(), request.getMethod());
     FullHttpRequest httpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1,
-        HttpMethod.POST, encoder.toString(), requestBuffer);
+        HttpMethod.POST, new QueryStringEncoder(uriPath).toString(), requestBuffer);
     httpRequest.headers().set(HttpHeaders.Names.CONTENT_LENGTH, requestBuffer.readableBytes());
+    httpRequest.headers().set(HttpHeaders.Names.CONTENT_TYPE, QuartzProtocol.CONTENT_TYPE);
     return httpRequest;
   }
 

@@ -84,7 +84,7 @@ class QuartzServerHandler extends EnvelopeServerHandler<HttpRequest, HttpRespons
   @Override
   protected boolean accept(HttpRequest request) {
     try {
-      return path.equals(new URI(request.getUri()).getPath());
+      return new URI(request.getUri()).getPath().startsWith(path);
     } catch (URISyntaxException e) {
       logger.warning("Cannot validate URL path, skipping request");
       return false;
@@ -108,6 +108,7 @@ class QuartzServerHandler extends EnvelopeServerHandler<HttpRequest, HttpRespons
     FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
         HttpResponseStatus.OK, responseBuffer);
     httpResponse.headers().set(HttpHeaders.Names.CONTENT_LENGTH, responseBuffer.readableBytes());
+    httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, QuartzProtocol.CONTENT_TYPE);
     return httpResponse;
   }
 }

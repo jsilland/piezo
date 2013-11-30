@@ -19,6 +19,7 @@ import io.soliton.protobuf.quartz.QuartzClient;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.io.Resources;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -27,6 +28,14 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,14 +55,15 @@ public class TimeClient {
   private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
   public static void main(String... args) throws Exception {
+    // Parse arguments
     TimeClient timeClient = new TimeClient();
     new JCommander(timeClient, args);
 
-    // Parse arguments
+    // Create client
     QuartzClient client = QuartzClient.newClient(
         HostAndPort.fromParts(timeClient.hostname, timeClient.port)).build();
 
-    // Create client
+    // Create service stub
     Time.TimeService.Interface timeService = Time.TimeService.newStub(client);
 
     // For each known timezone, request its current local time.

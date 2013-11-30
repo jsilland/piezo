@@ -28,5 +28,7 @@ class QuartzProtocol {
    */
   private QuartzProtocol() { }
 
-  static final String DEFAULT_PATH = "/quartz";
+  static final String DEFAULT_PATH = "/quartz/";
+
+  static final String CONTENT_TYPE = "application/octet-stream";
 }

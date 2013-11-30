@@ -54,6 +54,15 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-toolchains-plugin</artifactId>
         <version>1.0</version>
         <executions>
@@ -149,9 +158,9 @@
                 <argument>-classpath</argument>
                 <classpath/>
                 <argument>io.soliton.time.TimeClient</argument>
-                <argument>-port</argument>
-                <argument>443</argument>
-                <argument>-host</argument>
+                <argument>--port</argument>
+                <argument>80</argument>
+                <argument>--host</argument>
                 <argument>time.soliton.io</argument>
               </arguments>
             </configuration>
