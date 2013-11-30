@@ -19,6 +19,7 @@ package io.soliton.protobuf.quartz;
 import io.soliton.protobuf.Envelope;
 import io.soliton.protobuf.EnvelopeClientHandler;
 
+import com.google.common.base.Charsets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
@@ -81,7 +82,9 @@ class QuartzClientHandler extends EnvelopeClientHandler<HttpRequest, HttpRespons
     try {
       return Envelope.PARSER.parseFrom(content.content().array());
     } catch (InvalidProtocolBufferException ipbe) {
-      throw new ResponseConversionException(response, ipbe);
+      throw new ResponseConversionException(
+          String.format("HTTP status: %d, Content: %s", response.getStatus().code(),
+              content.content().toString(Charsets.UTF_8)), ipbe);
     }
   }
 

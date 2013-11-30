@@ -28,6 +28,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -53,7 +54,12 @@ public abstract class EnvelopeClientHandler<I, O> extends SimpleChannelInboundHa
    */
   @Override
   public void channelRead0(ChannelHandlerContext context, O response) throws Exception {
-    Envelope envelope = convertResponse(response);
+    Envelope envelope = null;
+    try {
+      envelope = convertResponse(response);
+    } catch (ResponseConversionException rce) {
+      logger.log(Level.WARNING, "Failed to convert response", rce);
+    }
     EnvelopeFuture<? extends Message> future = inFlightRequests.remove(envelope.getRequestId());
     if (future == null) {
       logger.warning(String.format("Received response from %s for unknown request id: %d",
