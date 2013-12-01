@@ -59,6 +59,7 @@ public abstract class EnvelopeClientHandler<I, O> extends SimpleChannelInboundHa
       envelope = convertResponse(response);
     } catch (ResponseConversionException rce) {
       logger.log(Level.WARNING, "Failed to convert response", rce);
+      return;
     }
     EnvelopeFuture<? extends Message> future = inFlightRequests.remove(envelope.getRequestId());
     if (future == null) {
@@ -142,6 +143,13 @@ public abstract class EnvelopeClientHandler<I, O> extends SimpleChannelInboundHa
   @VisibleForTesting
   public Map<Long, EnvelopeFuture<? extends Message>> inFlightRequests() {
     return inFlightRequests;
+  }
+
+  /**
+   * Returns the outbound channel connected to the remote server.
+   */
+  protected Channel channel() {
+    return channel;
   }
 
   /**

@@ -19,6 +19,7 @@ import io.soliton.protobuf.quartz.QuartzClient;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.google.common.base.Throwables;
 import com.google.common.io.Resources;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.FutureCallback;
@@ -36,6 +37,7 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -66,12 +68,16 @@ public class TimeClient {
     // Create service stub
     Time.TimeService.Interface timeService = Time.TimeService.newStub(client);
 
+    CountDownLatch latch = new CountDownLatch(DateTimeZone.getAvailableIDs().size());
+
     // For each known timezone, request its current local time.
     for (String timeZoneId : DateTimeZone.getAvailableIDs()) {
       DateTimeZone timeZone = DateTimeZone.forID(timeZoneId);
       Time.TimeRequest request = Time.TimeRequest.newBuilder().setTimezone(timeZoneId).build();
-      Futures.addCallback(timeService.getTime(request), new Callback(timeZone), EXECUTOR);
+      Futures.addCallback(timeService.getTime(request), new Callback(latch, timeZone), EXECUTOR);
     }
+
+    latch.await();
     client.close();
   }
 
@@ -79,21 +85,26 @@ public class TimeClient {
 
     private static final DateTimeFormatter FORMAT = DateTimeFormat.longDateTime();
 
+    private final CountDownLatch latch;
     private final DateTimeZone timeZone;
 
-    public Callback(DateTimeZone timeZone) {
+    public Callback(CountDownLatch latch, DateTimeZone timeZone) {
+      this.latch = latch;
       this.timeZone = timeZone;
     }
 
     @Override
     public void onSuccess(Time.TimeResponse response) {
+      latch.countDown();
       DateTime responseDateTime = new DateTime(response.getTime(), timeZone);
       System.out.println("Time in " + timeZone.getID() + " is: " + FORMAT.print(responseDateTime));
     }
 
     @Override
     public void onFailure(Throwable throwable) {
+      latch.countDown();
       System.out.println("Failed to obtain time for " + timeZone.getID());
+      System.out.println(Throwables.getStackTraceAsString(throwable));
     }
   }
 }

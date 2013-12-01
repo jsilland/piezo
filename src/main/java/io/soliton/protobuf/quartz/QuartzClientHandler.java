@@ -36,6 +36,7 @@ import io.netty.handler.codec.http.QueryStringEncoder;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 
 /**
  * Client-side handler in charge of decoding and dispatching the responses
@@ -61,9 +62,13 @@ class QuartzClientHandler extends EnvelopeClientHandler<HttpRequest, HttpRespons
       // deliberately ignored, as the underlying operation doesn't involve I/O
     }
 
+    String host = ((InetSocketAddress) channel().remoteAddress()).getAddress().getHostAddress();
     String uriPath = String.format("%s%s/%s", path, request.getService(), request.getMethod());
+
     FullHttpRequest httpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1,
         HttpMethod.POST, new QueryStringEncoder(uriPath).toString(), requestBuffer);
+    httpRequest.headers().set(HttpHeaders.Names.HOST, host);
+    httpRequest.headers().set(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
     httpRequest.headers().set(HttpHeaders.Names.CONTENT_LENGTH, requestBuffer.readableBytes());
     httpRequest.headers().set(HttpHeaders.Names.CONTENT_TYPE, QuartzProtocol.CONTENT_TYPE);
     return httpRequest;
