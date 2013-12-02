@@ -96,7 +96,7 @@ You will need to open a separate shell to run the client.
 Running the client
 ------------------
 
-By default, the client will connect to `time.soliton.io`. You should change the configuration in `exmaple/pom.xml` to specify localhost and then run:
+By default, the client will connect to `time.soliton.io`. You should change the configuration in `example/pom.xml` to specify localhost and then run:
 
 ```sh
 mvn -f example/pom.xml exec:exec -Dclient
