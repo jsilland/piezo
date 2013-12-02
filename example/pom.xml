@@ -168,5 +168,36 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>secureClient</id>
+      <activation>
+        <property>
+          <name>secureClient</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.2.1</version>
+            <configuration>
+              <executable>java</executable>
+              <arguments>
+                <argument>-classpath</argument>
+                <classpath/>
+                <argument>io.soliton.time.TimeClient</argument>
+                <argument>--port</argument>
+                <argument>443</argument>
+                <argument>--host</argument>
+                <argument>time.soliton.io</argument>
+                <argument>--ssl</argument>
+                <argument>true</argument>
+              </arguments>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>

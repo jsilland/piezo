@@ -54,6 +54,9 @@ public class TimeClient {
   @Parameter(names = "--host", description = "Hostname the client should connect to")
   private String hostname = "time.soliton.io";
 
+  @Parameter(names = "--ssl", description = "Enables SSL on the client")
+  private boolean ssl = false;
+
   private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
   public static void main(String... args) throws Exception {
@@ -62,8 +65,14 @@ public class TimeClient {
     new JCommander(timeClient, args);
 
     // Create client
-    QuartzClient client = QuartzClient.newClient(
-        HostAndPort.fromParts(timeClient.hostname, timeClient.port)).build();
+    QuartzClient.Builder clientBuilder = QuartzClient.newClient(
+        HostAndPort.fromParts(timeClient.hostname, timeClient.port));
+
+    if (timeClient.ssl) {
+      clientBuilder.setSslContext(getSslContext());
+    }
+
+    QuartzClient client = clientBuilder.build();
 
     // Create service stub
     Time.TimeService.Interface timeService = Time.TimeService.newStub(client);
@@ -79,6 +88,26 @@ public class TimeClient {
 
     latch.await();
     client.close();
+  }
+
+  private static SSLContext getSslContext() throws Exception {
+    // startcom.crt contains the root and intermediate certificates
+    URL certificates = Resources.getResource(TimeClient.class, "startcom.crt");
+    InputStream certificatesStream = Resources.newInputStreamSupplier(certificates).getInput();
+
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    keyStore.load(null, null);
+    CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+    int i = 0;
+    for (Certificate cert : certificateFactory.generateCertificates(certificatesStream)) {
+      keyStore.setCertificateEntry(String.valueOf(i), cert);
+      i++;
+    }
+    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("PKIX");
+    trustManagerFactory.init(keyStore);
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+    return sslContext;
   }
 
   public static final class Callback implements FutureCallback<Time.TimeResponse> {
