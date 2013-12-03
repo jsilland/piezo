@@ -36,6 +36,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import javax.annotation.Nullable;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -49,6 +51,10 @@ public class HttpJsonRpcClientTest {
   @Test
   public void testEncodeMethodCallSuccess() throws InvalidProtocolBufferException {
     Channel channel = Mockito.mock(Channel.class);
+
+    Mockito.when(channel.remoteAddress()).thenReturn(
+        new InetSocketAddress(InetAddress.getLoopbackAddress(), 10000));
+
     ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
     ChannelFuture success = Mockito.mock(ChannelFuture.class);
     Mockito.when(success.isDone()).thenReturn(true);
@@ -77,6 +83,10 @@ public class HttpJsonRpcClientTest {
   public void testEncodeMethodCallFailure() throws InvalidProtocolBufferException,
       InterruptedException {
     Channel channel = Mockito.mock(Channel.class);
+
+    Mockito.when(channel.remoteAddress()).thenReturn(
+        new InetSocketAddress(InetAddress.getLoopbackAddress(), 10000));
+
     ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
 
     DefaultChannelPromise failure = new DefaultChannelPromise(

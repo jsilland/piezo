@@ -37,7 +37,7 @@ public class SocketEndToEndTest extends AbstractEndToEndTest {
 
   @BeforeClass
   public static void setUp() throws Exception {
-    server = new RpcServer(findAvailablePort());
+    server = RpcServer.newServer(findAvailablePort()).build();
     server.start();
   }
 
