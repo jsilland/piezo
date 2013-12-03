@@ -51,6 +51,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.InetSocketAddress;
 import java.util.logging.Logger;
 
 /**
@@ -121,10 +122,14 @@ public class HttpJsonRpcClient implements Client {
     } catch (IOException ioe) {
       // Deliberately ignored, as this doesn't involve any I/O
     }
+
+    String host = ((InetSocketAddress) channel.remoteAddress()).getAddress().getHostAddress();
+
     QueryStringEncoder encoder = new QueryStringEncoder(rpcPath);
     encoder.addParam("pp", "0");
     HttpRequest httpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST,
         encoder.toString(), requestBuffer);
+    httpRequest.headers().set(HttpHeaders.Names.HOST, host);
     httpRequest.headers().set(HttpHeaders.Names.CONTENT_TYPE, JsonRpcProtocol.CONTENT_TYPE);
     httpRequest.headers().set(HttpHeaders.Names.CONTENT_LENGTH, requestBuffer.readableBytes());
 

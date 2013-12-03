@@ -55,6 +55,9 @@ public abstract class QuartzServer extends AbstractRpcServer {
     super(port, NioServerSocketChannel.class, new NioEventLoopGroup(), new NioEventLoopGroup());
   }
 
+  /**
+   * Configurable builder of {@link QuartzServer} instances.
+   */
   public static final class Builder {
 
     private final int port;
@@ -67,11 +70,24 @@ public abstract class QuartzServer extends AbstractRpcServer {
       this.port = port;
     }
 
+    /**
+     * Sets the encryption context this server should respect when new channels
+     * are opened.
+     *
+     * @param sslContext a configured context for SSL operations
+     * @return {@code this} instance
+     */
     public Builder setSslContext(SSLContext sslContext) {
       this.sslContext = Preconditions.checkNotNull(sslContext);
       return this;
     }
 
+    /**
+     * Sets the URI path prefix that should be validated when receiving
+     * requests.
+     *
+     * @return {@code this} instance
+     */
     public Builder setPath(String path) {
       Preconditions.checkNotNull(path);
       Preconditions.checkArgument(path.startsWith("/"));
@@ -79,11 +95,21 @@ public abstract class QuartzServer extends AbstractRpcServer {
       return this;
     }
 
+    /**
+     * Configures the object this server should log operations to.
+     *
+     * @param serverLogger the server-side monitoring logger
+     * @return {@code this} instance
+     */
     public Builder setServerLogger(ServerLogger serverLogger) {
       this.serverLogger = serverLogger;
       return this;
     }
 
+    /**
+     * Instantiates and returns a new server which has bound to the configured
+     * TPC port.
+     */
     public QuartzServer build() {
       return new QuartzServer(port) {
         protected ChannelInitializer<? extends Channel> channelInitializer() {

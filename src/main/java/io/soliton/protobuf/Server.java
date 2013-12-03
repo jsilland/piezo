@@ -23,7 +23,7 @@ package io.soliton.protobuf;
  * {@link Service} instances are kept. Server instances are responsible for
  * decoding method calls that are sent by a {@link Client} instance. As such,
  * concrete implementations of clients and servers are generally coupled and
- * must use the same protocol and transport.</p>
+ * must use the same encoding and transport.</p>
  * <p/>
  * <p>The configuration, startup and shutdown sequences of a server are
  * delegated to implementations of this abstraction.</p>
