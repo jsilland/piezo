@@ -63,7 +63,7 @@ public class HttpJsonRpcServerTest {
 
   @BeforeClass
   public static void setUp() throws Exception {
-    server = new HttpJsonRpcServer(findAvailablePort(), "/rpc");
+    server = HttpJsonRpcServer.newServer(findAvailablePort()).build();
     Service timeService = TimeService.newService(new TimeServer());
     server.serviceGroup().addService(timeService);
     server.start();

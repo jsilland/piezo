@@ -17,6 +17,7 @@
 package io.soliton.protobuf.json;
 
 import io.soliton.protobuf.Server;
+import io.soliton.protobuf.ServerLogger;
 
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.Futures;
@@ -53,6 +54,7 @@ final class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpRequest
 
   private final Server server;
   private final String rpcPath;
+  private final ServerLogger serverLogger;
   private final ExecutorService responseCallbackExecutor = Executors.newCachedThreadPool();
 
   /**
@@ -60,10 +62,12 @@ final class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpRequest
    *
    * @param server the server to which this handler is attached
    * @param rpcPath the HTTP endpoint path
+   * @param serverLogger the object to log server operations to
    */
-  public JsonRpcServerHandler(Server server, String rpcPath) {
+  public JsonRpcServerHandler(Server server, String rpcPath, ServerLogger serverLogger) {
     this.server = server;
     this.rpcPath = rpcPath;
+    this.serverLogger = serverLogger;
   }
 
   @Override

@@ -151,7 +151,7 @@ public class HttpJsonRpcClient implements Client {
   public static final class Builder {
 
     private final HostAndPort remoteAddress;
-    private String rpcPath = "/rpc";
+    private String rpcPath = JsonRpcProtocol.DEFAULT_RPC_PATH;
     private ClientLogger clientLogger = new NullClientLogger();
 
     private Builder(HostAndPort remoteAddress) {

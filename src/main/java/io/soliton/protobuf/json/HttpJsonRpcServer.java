@@ -18,7 +18,10 @@ package io.soliton.protobuf.json;
 
 import io.soliton.protobuf.AbstractRpcServer;
 import io.soliton.protobuf.ChannelInitializers;
+import io.soliton.protobuf.NullServerLogger;
+import io.soliton.protobuf.ServerLogger;
 
+import com.google.common.base.Preconditions;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -31,28 +34,49 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  * @author Julien Silland (julien@soliton.io)
  * @see <a href="http://json-rpc.org/">JSON-RPC</a>
  */
-public class HttpJsonRpcServer extends AbstractRpcServer {
+public abstract class HttpJsonRpcServer extends AbstractRpcServer {
 
-  private final String rpcPath;
+  public static Builder newServer(int port) {
+    return new Builder(port);
+  }
 
   /**
    * Exhaustive constructor.
    *
    * @param port the TCP port this server should bind to
-   * @param rpcPath the URL path to which the JSON-RPC handler should be bound
    */
-  public HttpJsonRpcServer(int port, String rpcPath) {
+  private HttpJsonRpcServer(int port) {
     super(port, NioServerSocketChannel.class, new NioEventLoopGroup(), new NioEventLoopGroup());
-    this.rpcPath = rpcPath;
   }
 
-  @Override
-  protected ChannelInitializer<? extends Channel> channelInitializer() {
-    return ChannelInitializers.httpServer(new JsonRpcServerHandler(this, rpcPath));
-  }
+  public static class Builder {
+    private final int port;
+    private String rpcPath = JsonRpcProtocol.DEFAULT_RPC_PATH;
+    private ServerLogger serverLogger = new NullServerLogger();
 
-  public static void main(String... args) throws Exception {
-    HttpJsonRpcServer server = new HttpJsonRpcServer(3000, "rpc");
-    server.start();
+    private Builder(int port) {
+      Preconditions.checkArgument(port > 0 && port < 65536);
+      this.port = port;
+    }
+
+    public Builder setRpcPath(String rpcPath) {
+      this.rpcPath = Preconditions.checkNotNull(rpcPath);
+      return this;
+    }
+
+    public Builder setServerLogger(ServerLogger serverLogger) {
+      this.serverLogger = Preconditions.checkNotNull(serverLogger);
+      return this;
+    }
+
+    public HttpJsonRpcServer build() {
+      return new HttpJsonRpcServer(port) {
+        @Override
+        protected ChannelInitializer<? extends Channel> channelInitializer() {
+          return ChannelInitializers.httpServer(
+              new JsonRpcServerHandler(this, rpcPath, serverLogger));
+        }
+      };
+    }
   }
 }

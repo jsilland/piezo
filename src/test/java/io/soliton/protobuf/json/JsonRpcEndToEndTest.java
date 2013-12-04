@@ -37,7 +37,7 @@ public class JsonRpcEndToEndTest extends AbstractEndToEndTest {
 
   @BeforeClass
   public static void setUp() throws Exception {
-    server = new HttpJsonRpcServer(findAvailablePort(), "/rpc");
+    server = HttpJsonRpcServer.newServer(findAvailablePort()).build();
     server.start();
   }
 
@@ -54,7 +54,6 @@ public class JsonRpcEndToEndTest extends AbstractEndToEndTest {
   @Override
   protected Client client() throws IOException {
     return HttpJsonRpcClient.newClient(HostAndPort.fromParts("localhost", port))
-        .setRpcPath("/rpc")
         .build();
   }
 }
