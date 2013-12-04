@@ -54,7 +54,7 @@ The following assumes you have working setup of the protocol buffer compiler. Pi
       </toolchain>
     </toolchains>
 
-Add the Piezo framework, the protocol buffer frameowrk and Guava as dependencies:
+Add the Piezo framework, the protocol buffer framework and Guava as dependencies:
 
     <dependencies>
       <dependency>
@@ -65,7 +65,7 @@ Add the Piezo framework, the protocol buffer frameowrk and Guava as dependencies
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>14.0.1</version>
+        <version>15.0</version>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -103,7 +103,7 @@ Configure the invocation of the compiler using maven-protoc-plugin:
       <plugin>
         <groupId>com.google.protobuf.tools</groupId>
         <artifactId>maven-protoc-plugin</artifactId>
-        <version>0.3.1</version>
+        <version>0.3.3</version>
         <extensions>true</extensions>
         <executions>
           <execution>
@@ -119,7 +119,7 @@ Configure the invocation of the compiler using maven-protoc-plugin:
                   <id>piezo-plugin</id>
                   <groupId>io.soliton</groupId>
                   <artifactId>piezo-plugin</artifactId>
-                  <version>1.0-SNAPSHOT</version>
+                  <version>1.0.1</version>
                   <mainClass>io.soliton.protobuf.plugin.PiezoPlugin</mainClass>
                 </protocPlugin>
               </protocPlugins>
