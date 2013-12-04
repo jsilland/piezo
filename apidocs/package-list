@@ -1,2 +1,4 @@
 io.soliton.protobuf
 io.soliton.protobuf.json
+io.soliton.protobuf.quartz
+io.soliton.protobuf.socket
