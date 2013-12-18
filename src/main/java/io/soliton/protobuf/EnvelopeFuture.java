@@ -58,7 +58,7 @@ public class EnvelopeFuture<V extends Message> extends AbstractFuture<V> {
     }
     try {
       set(clientMethod.outputParser().parseFrom(response.getPayload()));
-      clientLogger.logClientSuccess(clientMethod);
+      clientLogger.logSuccess(clientMethod);
     } catch (InvalidProtocolBufferException ipbe) {
       setException(ipbe);
     }

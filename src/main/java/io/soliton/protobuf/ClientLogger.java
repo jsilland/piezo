@@ -66,5 +66,5 @@ public interface ClientLogger {
    * @param clientMethod the method that was invoked
    * @param <O> the return type of the method
    */
-  public <O extends Message> void logClientSuccess(ClientMethod<O> clientMethod);
+  public <O extends Message> void logSuccess(ClientMethod<O> clientMethod);
 }

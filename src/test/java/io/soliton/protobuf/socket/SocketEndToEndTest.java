@@ -38,12 +38,12 @@ public class SocketEndToEndTest extends AbstractEndToEndTest {
   @BeforeClass
   public static void setUp() throws Exception {
     server = RpcServer.newServer(findAvailablePort()).build();
-    server.start();
+    server.startAsync().awaitRunning();
   }
 
   @AfterClass
   public static void tearDown() {
-    server.stop();
+    server.stopAsync().awaitTerminated();
   }
 
   @Override

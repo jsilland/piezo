@@ -21,6 +21,7 @@ import io.soliton.protobuf.ServerLogger;
 
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -56,6 +57,7 @@ final class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpRequest
   private final String rpcPath;
   private final ServerLogger serverLogger;
   private final ExecutorService responseCallbackExecutor = Executors.newCachedThreadPool();
+  private final JsonRpcRequestInvoker invoker;
 
   /**
    * Exhaustive constructor.
@@ -68,6 +70,7 @@ final class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpRequest
     this.server = server;
     this.rpcPath = rpcPath;
     this.serverLogger = serverLogger;
+    this.invoker = new JsonRpcRequestInvoker(server.serviceGroup(), serverLogger);
   }
 
   @Override
@@ -116,12 +119,13 @@ final class JsonRpcServerHandler extends SimpleChannelInboundHandler<HttpRequest
     try {
       jsonRpcRequest = JsonRpcRequest.fromJson(root);
     } catch (JsonRpcError error) {
+      serverLogger.logClientError(error);
       JsonRpcResponse response = JsonRpcResponse.error(error, id);
       new JsonRpcCallback(null, ctx.channel(), true).onSuccess(response);
       return;
     }
 
-    Futures.addCallback(jsonRpcRequest.invoke(server.serviceGroup()),
+    Futures.addCallback(invoker.invoke(jsonRpcRequest),
         new JsonRpcCallback(jsonRpcRequest.id(), ctx.channel(), shouldPrettyPrint(request)),
         responseCallbackExecutor);
   }

@@ -16,6 +16,7 @@
 
 package io.soliton.protobuf;
 
+import com.google.common.util.concurrent.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -33,7 +34,7 @@ import java.util.logging.Logger;
  *
  * @author Julien Silland (julien@soliton.io)
  */
-public abstract class AbstractRpcServer implements Server {
+public abstract class AbstractRpcServer extends AbstractIdleService implements Server {
 
   private static final Logger logger = Logger.getLogger(AbstractRpcServer.class.getCanonicalName());
 
@@ -65,7 +66,7 @@ public abstract class AbstractRpcServer implements Server {
    * <p/>
    * <p>This is a synchronous operation.</p>
    */
-  public void start() throws Exception {
+  public void startUp() throws Exception {
     logger.info(String.format("Starting RPC server on port %d", port));
     ServerBootstrap bootstrap = new ServerBootstrap();
 
@@ -89,7 +90,7 @@ public abstract class AbstractRpcServer implements Server {
    * <p/>
    * <p>This is a synchronous operation.</p>
    */
-  public void stop() {
+  public void shutDown() {
     logger.info("Shutting down RPC server.");
     channel.close().addListener(new GenericFutureListener<Future<Void>>() {
 

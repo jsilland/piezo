@@ -108,7 +108,7 @@ public class HttpJsonRpcClient implements Client {
       Message input) {
     clientLogger.logMethodCall(method);
     final JsonResponseFuture<O> responseFuture =
-        handler.newProvisionalResponse(method.outputBuilder());
+        handler.newProvisionalResponse(method);
 
     JsonObject request = new JsonRpcRequest(method.serviceName(), method.name(),
         new JsonPrimitive(responseFuture.requestId()), Messages.toJson(input)).toJson();
@@ -137,7 +137,7 @@ public class HttpJsonRpcClient implements Client {
 
       public void operationComplete(ChannelFuture future) {
         if (!future.isSuccess()) {
-          clientLogger.logClientError(method, future.cause());
+          clientLogger.logLinkError(method, future.cause());
           handler.finish(responseFuture.requestId());
           responseFuture.setException(future.cause());
         }

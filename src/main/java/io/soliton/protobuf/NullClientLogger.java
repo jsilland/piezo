@@ -45,7 +45,7 @@ public class NullClientLogger implements ClientLogger {
   }
 
   @Override
-  public <O extends Message> void logClientSuccess(ClientMethod<O> clientMethod) {
+  public <O extends Message> void logSuccess(ClientMethod<O> clientMethod) {
 
   }
 }

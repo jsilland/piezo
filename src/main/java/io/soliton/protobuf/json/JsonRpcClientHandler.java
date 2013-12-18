@@ -17,6 +17,7 @@
 package io.soliton.protobuf.json;
 
 import io.soliton.protobuf.ClientLogger;
+import io.soliton.protobuf.ClientMethod;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -58,6 +59,8 @@ class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
   protected void channelRead0(ChannelHandlerContext channelHandlerContext,
       HttpResponse response) throws Exception {
     if (!(response instanceof HttpContent)) {
+      clientLogger.logServerError(
+          null, null, new Exception("Returned response has no content"));
       logger.severe("Returned response has no content");
       return;
     }
@@ -76,6 +79,7 @@ class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
       JsonReader reader = new JsonReader(new InputStreamReader(stream, Charsets.UTF_8));
       root = new JsonParser().parse(reader);
     } catch (JsonSyntaxException jsonException) {
+      clientLogger.logServerError(null, null, jsonException);
       logger.warning("JSON response cannot be decoded");
       return;
     }
@@ -88,6 +92,8 @@ class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
 
     JsonElement requestId = jsonRpcResponse.id();
     if (requestId == null || !requestId.isJsonPrimitive()) {
+      clientLogger.logServerError(
+          null, null, new Exception("Received response identifier is not JSON primitive"));
       logger.warning("Received response identifier is not JSON primitive: "
           + requestId.toString());
       return;
@@ -95,10 +101,13 @@ class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
 
     JsonResponseFuture<? extends Message> future = inFlightRequests.remove(requestId.getAsLong());
     if (future == null) {
-      logger.warning("Response received for unknown identifier: " + requestId.getAsLong());
+      clientLogger.logServerError(
+          null, null, new Exception("Response received for unknown identifier"));
+      logger.severe("Response received for unknown identifier: " + requestId.getAsLong());
       return;
     }
 
+    clientLogger.logSuccess(future.method());
     future.setResponse(jsonRpcResponse);
   }
 
@@ -106,13 +115,12 @@ class JsonRpcClientHandler extends SimpleChannelInboundHandler<HttpResponse> {
    * Returns a new provisional response suited to receive results of a given
    * protobuf message type.
    *
-   * @param outputBuilder the builder for the message's type
+   * @param method the method invocation for which a response should be created
    * @param <O> the type of the message this response will handle
    */
-  <O extends Message> JsonResponseFuture<O> newProvisionalResponse(
-      Message.Builder outputBuilder) {
+  <O extends Message> JsonResponseFuture<O> newProvisionalResponse(ClientMethod<O> method) {
     long requestId = RANDOM.nextLong();
-    JsonResponseFuture<O> outputFuture = new JsonResponseFuture<>(requestId, outputBuilder);
+    JsonResponseFuture<O> outputFuture = new JsonResponseFuture<>(requestId, method);
     inFlightRequests.put(requestId, outputFuture);
     return outputFuture;
   }

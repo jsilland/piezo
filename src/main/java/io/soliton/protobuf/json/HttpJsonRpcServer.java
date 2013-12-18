@@ -36,6 +36,11 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
  */
 public abstract class HttpJsonRpcServer extends AbstractRpcServer {
 
+  /**
+   * Creates a new builder for instances of {@link HttpJsonRpcServer}
+   *
+   * @param port the TCP port the server should bind to
+   */
   public static Builder newServer(int port) {
     return new Builder(port);
   }
@@ -49,6 +54,9 @@ public abstract class HttpJsonRpcServer extends AbstractRpcServer {
     super(port, NioServerSocketChannel.class, new NioEventLoopGroup(), new NioEventLoopGroup());
   }
 
+  /**
+   * Configurable builder for instances of {@link HttpJsonRpcServer}
+   */
   public static class Builder {
     private final int port;
     private String rpcPath = JsonRpcProtocol.DEFAULT_RPC_PATH;
@@ -59,16 +67,32 @@ public abstract class HttpJsonRpcServer extends AbstractRpcServer {
       this.port = port;
     }
 
-    public Builder setRpcPath(String rpcPath) {
+    /**
+     * Sets the URL path for which this server will be enabled.
+     *
+     * @return {@code this} object
+     */
+    public Builder setRpcPath(String rpcPath) {;
       this.rpcPath = Preconditions.checkNotNull(rpcPath);
+      Preconditions.checkArgument(rpcPath.startsWith("/"));
       return this;
     }
 
+    /**
+     * Sets the logger the server will use.
+     *
+     * @return {@code this} object
+     */
     public Builder setServerLogger(ServerLogger serverLogger) {
       this.serverLogger = Preconditions.checkNotNull(serverLogger);
       return this;
     }
 
+    /**
+     * Returns a new server as per the configuration of this builder.
+     *
+     * <p>This operation synchronously binds to the configured TCP port.</p>
+     */
     public HttpJsonRpcServer build() {
       return new HttpJsonRpcServer(port) {
         @Override

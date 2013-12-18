@@ -125,7 +125,7 @@ public class QuartzClient implements Client {
 
       public void operationComplete(ChannelFuture future) {
         if (!future.isSuccess()) {
-          clientLogger.logClientError(method, future.cause());
+          clientLogger.logLinkError(method, future.cause());
           handler.finish(output.requestId());
           output.setException(future.cause());
         }

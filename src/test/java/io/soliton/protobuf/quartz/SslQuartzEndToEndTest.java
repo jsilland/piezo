@@ -65,12 +65,12 @@ public class SslQuartzEndToEndTest extends AbstractEndToEndTest {
     server = QuartzServer.newServer(findAvailablePort())
         .setSslContext(sslContext)
         .build();
-    server.start();
+    server.startAsync().awaitRunning();
   }
 
   @AfterClass
   public static void tearDown() {
-    server.stop();
+    server.stopAsync().awaitTerminated();
   }
 
   @Override

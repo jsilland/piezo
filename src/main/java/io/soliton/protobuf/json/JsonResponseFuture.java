@@ -16,6 +16,8 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.ClientMethod;
+
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.protobuf.Message;
 
@@ -32,11 +34,11 @@ import com.google.protobuf.Message;
 public final class JsonResponseFuture<V extends Message> extends AbstractFuture<V> {
 
   private final long requestId;
-  private final Message.Builder responseBuilder;
+  private final ClientMethod<V> method;
 
-  public JsonResponseFuture(long requestId, Message.Builder responseBuilder) {
+  public JsonResponseFuture(long requestId, ClientMethod<V> method) {
     this.requestId = requestId;
-    this.responseBuilder = responseBuilder;
+    this.method = method;
   }
 
   /**
@@ -51,7 +53,7 @@ public final class JsonResponseFuture<V extends Message> extends AbstractFuture<
     }
 
     try {
-      set((V) Messages.fromJson(responseBuilder, response.result()));
+      set((V) Messages.fromJson(method.outputBuilder(), response.result()));
     } catch (Exception e) {
       setException(e);
     }
@@ -80,4 +82,10 @@ public final class JsonResponseFuture<V extends Message> extends AbstractFuture<
     return requestId;
   }
 
+  /**
+   * Returns the method for which this response holder was created.
+   */
+  public ClientMethod<V> method() {
+    return method;
+  }
 }
