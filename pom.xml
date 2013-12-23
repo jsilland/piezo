@@ -15,9 +15,9 @@
     <url>http://soliton.io/piezo</url>
 
     <scm>
-        <connection>scm:git:https://github.com/jsilland/piezo.git</connection>
-        <url>scm:git:https://github.com/jsilland/piezo.git</url>
-        <developerConnection>scm:git:https://github.com/jsilland/pizeo.git</developerConnection>
+        <url>https://github.com/jsilland/piezo</url>
+        <connection>scm:git:git://github.com/jsilland/piezo.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jsilland/piezo.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
