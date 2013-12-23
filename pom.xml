@@ -5,7 +5,7 @@
     <groupId>io.soliton</groupId>
     <artifactId>piezo</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-rc1</version>
+    <version>1.0-rc2-SNAPSHOT</version>
 
     <name>Piezo</name>
     <description>Piezo is a protobuf RPC framework</description>
@@ -16,7 +16,7 @@
         <url>https://github.com/jsilland/piezo</url>
         <connection>scm:git:git://github.com/jsilland/piezo.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jsilland/piezo.git</developerConnection>
-        <tag>piezo-1.0-rc1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
