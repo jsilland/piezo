@@ -10,7 +10,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <name>Piezo</name>
-    <description>Piezo is an RPC framework</description>
+    <description>Piezo is a protobuf RPC framework</description>
 
     <url>http://soliton.io/piezo</url>
 
