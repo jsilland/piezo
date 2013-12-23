@@ -12,8 +12,24 @@ The build status, hopefully green: [![Build Status](https://travis-ci.org/jsilla
 Installation
 ------------
 
-Piezo is not yet available in Maven Central, so you'll have to install the framework manually for the time being. This requires a protocol buffer toolchain to be available (see [Usage](https://github.com/jsilland/piezo/wiki/Usage)).
+Piezo 1.0-RC1 is presently available on Maven Central. Please treat this as pre-release software. To bring in Piezo into your build, add the following dependencies to your `pom.xml`:
 
-In `piezo`:
-
-    mvn install
+```xml
+<dependencies>
+  <dependency>
+    <groupId>io.soliton</groupId>
+    <artifactId>piezo</artifactId>
+    <version>1.0-rc1</version>
+  </dependency>
+  <dependency>
+    <groupId>com.google.guava</groupId>
+    <artifactId>guava</artifactId>
+    <version>15.0</version>
+  </dependency>
+  <dependency>
+    <groupId>com.google.protobuf</groupId>
+    <artifactId>protobuf-java</artifactId>
+    <version>2.5.0</version>
+  </dependency>
+</dependencies>
+```
