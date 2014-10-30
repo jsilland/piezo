@@ -21,13 +21,6 @@ import io.soliton.protobuf.Client;
 import io.soliton.protobuf.Server;
 import io.soliton.protobuf.TimeServer;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.BaseEncoding;
-import com.google.common.io.Resources;
-import com.google.common.net.HostAndPort;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.ManagerFactoryParameters;
 import javax.net.ssl.SSLContext;
@@ -41,6 +34,13 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.X509Certificate;
 import java.util.logging.Logger;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.BaseEncoding;
+import com.google.common.io.Resources;
+import com.google.common.net.HostAndPort;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /**
  * End-to-end tests for the encrypted link between a Quartz client and server.
@@ -57,7 +57,7 @@ public class SslQuartzEndToEndTest extends AbstractEndToEndTest {
     KeyStore keyStore = KeyStore.getInstance("PKCS12");
     URL url = Resources.getResource(TimeServer.class, "server.b64.p12");
     InputStream keyStoreStream = BaseEncoding.base64().decodingStream(
-        Resources.newReaderSupplier(url, Charsets.UTF_8).getInput());
+        Resources.asCharSource(url, Charsets.UTF_8).openStream());
     keyStore.load(keyStoreStream, "password".toCharArray());
     KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
     keyManagerFactory.init(keyStore, "password".toCharArray());

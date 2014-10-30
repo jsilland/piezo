@@ -5,7 +5,7 @@ cat > toolchains.xml <<EOF
         <toolchain>
                 <type>protobuf</type>
                 <provides>
-                        <version>2.5.0</version>
+                        <version>2.6.0</version>
                 </provides>
                 <configuration>
                         <protocExecutable>$PROTOC_PATH</protocExecutable>

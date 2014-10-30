@@ -2,11 +2,9 @@ language: java
 jdk:
   - openjdk7
 before_install:
-  - sudo add-apt-repository ppa:chris-lea/protobuf -y
-  - sudo apt-get update
-  - sudo apt-get install protobuf-compiler=2.5.0-1chl1~precise1 -y
-  - sudo apt-get install libprotoc7=2.5.0-1chl1~precise1 -y
-  - sudo apt-get install libprotobuf7=2.5.0-1chl1~precise1 -y
+  - wget https://protobuf.googlecode.com/svn/rc/protobuf-2.6.0.tar.gz
+  - tar -xzvf protobuf-2.6.0.tar.gz
+  - cd protobuf-2.6.0 && ./configure --prefix=/usr && make && make install
   - ./src/main/sh/generate_toolchains.sh
 install: mvn --toolchains toolchains.xml install -DskipTests=true
 script: mvn --toolchains toolchains.xml test
