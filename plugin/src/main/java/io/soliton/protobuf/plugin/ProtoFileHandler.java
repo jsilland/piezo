@@ -16,6 +16,9 @@
 
 package io.soliton.protobuf.plugin;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -25,56 +28,53 @@ import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 import com.google.protobuf.DescriptorProtos.ServiceDescriptorProto;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 /**
  * @author Julien Silland (julien@soliton.io)
  */
 public class ProtoFileHandler {
 
-  private final TypeMap types;
-  private final OutputStream output;
+	private final TypeMap types;
+	private final OutputStream output;
 
-  public ProtoFileHandler(TypeMap types, OutputStream output) {
-    this.types = Preconditions.checkNotNull(types);
-    this.output = Preconditions.checkNotNull(output);
-  }
+	public ProtoFileHandler(TypeMap types, OutputStream output) {
+		this.types = Preconditions.checkNotNull(types);
+		this.output = Preconditions.checkNotNull(output);
+	}
 
-  public void handle(FileDescriptorProto protoFile) throws IOException {
-    String javaPackage = inferJavaPackage(protoFile);
-    boolean multipleFiles = protoFile.getOptions().getJavaMultipleFiles();
-    String outerClassName = null;
-    if (!multipleFiles) {
-      if (protoFile.getOptions().hasJavaOuterClassname()) {
-        outerClassName = protoFile.getOptions().getJavaOuterClassname();
-      } else {
-        outerClassName = inferOuterClassName(protoFile);
-      }
-    }
-    ProtoServiceHandler serviceHandler = new ProtoServiceHandler(javaPackage, types,
-        multipleFiles, outerClassName, protoFile.getPackage(), output);
-    for (ServiceDescriptorProto service : protoFile.getServiceList()) {
-      serviceHandler.handle(service);
-    }
-  }
+	public void handle(FileDescriptorProto protoFile) throws IOException {
+		String javaPackage = inferJavaPackage(protoFile);
+		boolean multipleFiles = protoFile.getOptions().getJavaMultipleFiles();
+		String outerClassName = null;
+		if (!multipleFiles) {
+			if (protoFile.getOptions().hasJavaOuterClassname()) {
+				outerClassName = protoFile.getOptions().getJavaOuterClassname();
+			} else {
+				outerClassName = inferOuterClassName(protoFile);
+			}
+		}
+		ProtoServiceHandler serviceHandler = new ProtoServiceHandler(javaPackage, types,
+				multipleFiles, outerClassName, protoFile.getPackage(), output);
+		for (ServiceDescriptorProto service : protoFile.getServiceList()) {
+			serviceHandler.handle(service);
+		}
+	}
 
-  @VisibleForTesting
-  static String inferJavaPackage(FileDescriptorProto file) {
-    FileOptions options = file.getOptions();
-    return options.hasJavaPackage() ?
-        options.getJavaPackage() : file.hasPackage() ? file.getPackage() : null;
-  }
+	@VisibleForTesting
+	static String inferJavaPackage(FileDescriptorProto file) {
+		FileOptions options = file.getOptions();
+		return options.hasJavaPackage() ?
+			   options.getJavaPackage() : file.hasPackage() ? file.getPackage() : null;
+	}
 
-  @VisibleForTesting
-  static String inferOuterClassName(FileDescriptorProto file) {
-    String fileName = file.getName();
-    if (fileName.endsWith(".proto")) {
-      fileName = fileName.substring(0, fileName.length() - ".proto".length());
-    }
-    fileName = Iterables.getLast(Splitter.on('/').split(fileName));
-    fileName = fileName.replace('-', '_');
-    fileName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, fileName);
-    return Character.toUpperCase(fileName.charAt(0)) + fileName.substring(1);
-  }
+	@VisibleForTesting
+	static String inferOuterClassName(FileDescriptorProto file) {
+		String fileName = file.getName();
+		if (fileName.endsWith(".proto")) {
+			fileName = fileName.substring(0, fileName.length() - ".proto".length());
+		}
+		fileName = Iterables.getLast(Splitter.on('/').split(fileName));
+		fileName = fileName.replace('-', '_');
+		fileName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, fileName);
+		return Character.toUpperCase(fileName.charAt(0)) + fileName.substring(1);
+	}
 }

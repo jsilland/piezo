@@ -18,6 +18,10 @@ package io.soliton.protobuf;
 
 import io.soliton.protobuf.testing.TimeResponse;
 
+import javax.annotation.Nullable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.protobuf.Message.Builder;
@@ -28,10 +32,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import javax.annotation.Nullable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Tests for {@link io.soliton.protobuf.EnvelopeClientHandler}
  *
@@ -39,89 +39,90 @@ import java.util.concurrent.TimeUnit;
  */
 public class EnvelopeClientHandlerTest {
 
-  private static class IdentityEnvelopeClientHandler extends EnvelopeClientHandler<Envelope,
-      Envelope> {
+	private static class IdentityEnvelopeClientHandler extends EnvelopeClientHandler<Envelope,
+			Envelope> {
 
-    @Override
-    public Envelope convertRequest(Envelope request) {
-      return request;
-    }
+		@Override
+		public Envelope convertRequest(Envelope request) {
+			return request;
+		}
 
-    @Override
-    public Envelope convertResponse(Envelope response) throws ResponseConversionException {
-      return response;
-    }
-  }
+		@Override
+		public Envelope convertResponse(Envelope response) throws ResponseConversionException {
+			return response;
+		}
+	}
 
-  private static final ClientMethod<TimeResponse> CLIENT_METHOD = new ClientMethod<TimeResponse>() {
-    @Override
-    public String serviceName() {
-      return null;
-    }
+	private static final ClientMethod<TimeResponse> CLIENT_METHOD = new ClientMethod<TimeResponse>
+			() {
+		@Override
+		public String serviceName() {
+			return null;
+		}
 
-    @Override
-    public String name() {
-      return null;
-    }
+		@Override
+		public String name() {
+			return null;
+		}
 
-    @Override
-    public Parser<TimeResponse> outputParser() {
-      return TimeResponse.PARSER;
-    }
+		@Override
+		public Parser<TimeResponse> outputParser() {
+			return TimeResponse.PARSER;
+		}
 
-    @Override
-    public Builder outputBuilder() {
-      return null;
-    }
-  };
+		@Override
+		public Builder outputBuilder() {
+			return null;
+		}
+	};
 
-  @Test
-  public void testProvisionAndCancel() {
-    EnvelopeClientHandler handler = new IdentityEnvelopeClientHandler();
+	@Test
+	public void testProvisionAndCancel() {
+		EnvelopeClientHandler handler = new IdentityEnvelopeClientHandler();
 
-    Channel channel = Mockito.mock(Channel.class);
-    handler.setChannel(channel);
-    handler.setClientLogger(new NullClientLogger());
-    EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(CLIENT_METHOD);
-    future.cancel(true);
+		Channel channel = Mockito.mock(Channel.class);
+		handler.setChannel(channel);
+		handler.setClientLogger(new NullClientLogger());
+		EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(CLIENT_METHOD);
+		future.cancel(true);
 
-    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-    Mockito.verify(channel).writeAndFlush(captor.capture());
-    Object argument = captor.getValue();
-    Assert.assertTrue(argument instanceof Envelope);
-    Envelope cancellation = (Envelope) argument;
-    Assert.assertEquals(future.requestId(), cancellation.getRequestId());
-    Assert.assertTrue(cancellation.hasControl());
-    Assert.assertTrue(cancellation.getControl().getCancel());
-  }
+		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(channel).writeAndFlush(captor.capture());
+		Object argument = captor.getValue();
+		Assert.assertTrue(argument instanceof Envelope);
+		Envelope cancellation = (Envelope) argument;
+		Assert.assertEquals(future.requestId(), cancellation.getRequestId());
+		Assert.assertTrue(cancellation.hasControl());
+		Assert.assertTrue(cancellation.getControl().getCancel());
+	}
 
-  @Test
-  public void testReceiveResponse() throws Exception {
-    EnvelopeClientHandler handler = new IdentityEnvelopeClientHandler();
-    handler.setClientLogger(new NullClientLogger());
-    EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(CLIENT_METHOD);
+	@Test
+	public void testReceiveResponse() throws Exception {
+		EnvelopeClientHandler handler = new IdentityEnvelopeClientHandler();
+		handler.setClientLogger(new NullClientLogger());
+		EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(CLIENT_METHOD);
 
-    final CountDownLatch latch = new CountDownLatch(1);
-    FutureCallback<TimeResponse> callback = new FutureCallback<TimeResponse>() {
-      @Override
-      public void onSuccess(@Nullable TimeResponse result) {
-        Assert.assertEquals(5L, result.getTime());
-        latch.countDown();
-      }
+		final CountDownLatch latch = new CountDownLatch(1);
+		FutureCallback<TimeResponse> callback = new FutureCallback<TimeResponse>() {
+			@Override
+			public void onSuccess(@Nullable TimeResponse result) {
+				Assert.assertEquals(5L, result.getTime());
+				latch.countDown();
+			}
 
-      @Override
-      public void onFailure(Throwable t) {
-      }
-    };
+			@Override
+			public void onFailure(Throwable t) {
+			}
+		};
 
-    Futures.addCallback(future, callback);
+		Futures.addCallback(future, callback);
 
-    Envelope response = Envelope.newBuilder()
-        .setRequestId(future.requestId())
-        .setPayload(TimeResponse.newBuilder().setTime(5L).build().toByteString())
-        .build();
-    handler.channelRead0(null, response);
+		Envelope response = Envelope.newBuilder()
+				.setRequestId(future.requestId())
+				.setPayload(TimeResponse.newBuilder().setTime(5L).build().toByteString())
+				.build();
+		handler.channelRead0(null, response);
 
-    latch.await(5, TimeUnit.SECONDS);
-  }
+		latch.await(5, TimeUnit.SECONDS);
+	}
 }

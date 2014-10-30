@@ -20,81 +20,81 @@ import com.google.common.collect.ImmutableList;
 
 public class ServiceHandlerData {
 
-  public static class Service {
+	public static class Service {
 
-    private final String name;
-    private final String fullName;
-    private final ImmutableList<Method> methods;
+		private final String name;
+		private final String fullName;
+		private final ImmutableList<Method> methods;
 
-    Service(String name, String fullName, ImmutableList<Method> methods) {
-      this.name = name;
-      this.fullName = fullName;
-      this.methods = methods;
-    }
+		Service(String name, String fullName, ImmutableList<Method> methods) {
+			this.name = name;
+			this.fullName = fullName;
+			this.methods = methods;
+		}
 
-    public String getName() {
-      return name;
-    }
+		public String getName() {
+			return name;
+		}
 
-    public String getFullName() {
-      return fullName;
-    }
+		public String getFullName() {
+			return fullName;
+		}
 
-    public ImmutableList<Method> getMethods() {
-      return methods;
-    }
-  }
+		public ImmutableList<Method> getMethods() {
+			return methods;
+		}
+	}
 
-  public static class Method {
+	public static class Method {
 
-    private final String name;
-    private final String javaName;
-    private final String inputType;
-    private final String outputType;
+		private final String name;
+		private final String javaName;
+		private final String inputType;
+		private final String outputType;
 
-    Method(String name, String javaName, String inputType, String outputType) {
-      this.name = name;
-      this.javaName = javaName;
-      this.inputType = inputType;
-      this.outputType = outputType;
-    }
+		Method(String name, String javaName, String inputType, String outputType) {
+			this.name = name;
+			this.javaName = javaName;
+			this.inputType = inputType;
+			this.outputType = outputType;
+		}
 
-    public String getName() {
-      return name;
-    }
+		public String getName() {
+			return name;
+		}
 
-    public String getJavaName() {
-      return javaName;
-    }
+		public String getJavaName() {
+			return javaName;
+		}
 
-    public String getInputType() {
-      return inputType;
-    }
+		public String getInputType() {
+			return inputType;
+		}
 
-    public String getOutputType() {
-      return outputType;
-    }
-  }
+		public String getOutputType() {
+			return outputType;
+		}
+	}
 
-  private final String javaPackage;
-  private final boolean multipleFiles;
-  private final Service service;
+	private final String javaPackage;
+	private final boolean multipleFiles;
+	private final Service service;
 
-  public ServiceHandlerData(String javaPackage, boolean multipleFiles, Service service) {
-    this.javaPackage = javaPackage;
-    this.multipleFiles = multipleFiles;
-    this.service = service;
-  }
+	public ServiceHandlerData(String javaPackage, boolean multipleFiles, Service service) {
+		this.javaPackage = javaPackage;
+		this.multipleFiles = multipleFiles;
+		this.service = service;
+	}
 
-  public String getJavaPackage() {
-    return javaPackage;
-  }
+	public String getJavaPackage() {
+		return javaPackage;
+	}
 
-  public boolean getMultipleFiles() {
-    return multipleFiles;
-  }
+	public boolean getMultipleFiles() {
+		return multipleFiles;
+	}
 
-  public Service getService() {
-    return service;
-  }
+	public Service getService() {
+		return service;
+	}
 }

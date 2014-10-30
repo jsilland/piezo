@@ -16,6 +16,13 @@
 
 package io.soliton.protobuf;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -32,13 +39,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.concurrent.GenericFutureListener;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  * Shared server-side handler implementation for servers whose method calls
  * are encoded using an {@link Envelope} message.
@@ -49,255 +49,258 @@ import java.util.logging.Logger;
  */
 public abstract class EnvelopeServerHandler<I, O> extends SimpleChannelInboundHandler<I> {
 
-  public static final Logger logger = Logger.getLogger(
-      EnvelopeServerHandler.class.getCanonicalName());
+	public static final Logger logger = Logger.getLogger(
+			EnvelopeServerHandler.class.getCanonicalName());
 
-  private final ConcurrentMap<Long, ListenableFuture<?>> pendingRequests = new MapMaker().makeMap();
-  private final ExecutorService responseCallbackExecutor = Executors.newCachedThreadPool();
+	private final ConcurrentMap<Long, ListenableFuture<?>> pendingRequests = new MapMaker()
+			.makeMap();
+	private final ExecutorService responseCallbackExecutor = Executors.newCachedThreadPool();
 
-  private final ServiceGroup services;
-  private final ServerLogger serverLogger;
+	private final ServiceGroup services;
+	private final ServerLogger serverLogger;
 
-  public EnvelopeServerHandler(ServiceGroup services, ServerLogger serverLogger) {
-    this.services = Preconditions.checkNotNull(services);
-    this.serverLogger = Preconditions.checkNotNull(serverLogger);
-  }
+	public EnvelopeServerHandler(ServiceGroup services, ServerLogger serverLogger) {
+		this.services = Preconditions.checkNotNull(services);
+		this.serverLogger = Preconditions.checkNotNull(serverLogger);
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isSharable() {
-    return true;
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isSharable() {
+		return true;
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void channelRead0(ChannelHandlerContext context, I request)
-      throws Exception {
-    if (!accept(request)) {
-      context.fireChannelRead(request);
-      return;
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void channelRead0(ChannelHandlerContext context, I request)
+			throws Exception {
+		if (!accept(request)) {
+			context.fireChannelRead(request);
+			return;
+		}
 
-    Envelope envelope = null;
-    try {
-      envelope = convertRequest(request);
-    } catch (RequestConversionException rce) {
-      serverLogger.logClientError(rce);
-      throw rce;
-    }
+		Envelope envelope = null;
+		try {
+			envelope = convertRequest(request);
+		} catch (RequestConversionException rce) {
+			serverLogger.logClientError(rce);
+			throw rce;
+		}
 
-    if (envelope.hasControl() && envelope.getControl().getCancel()) {
-      ListenableFuture<?> pending = pendingRequests.remove(envelope.getRequestId());
-      if (pending != null) {
-        boolean cancelled = pending.cancel(true);
-        context.channel().writeAndFlush(Envelope.newBuilder()
-            .setRequestId(envelope.getRequestId())
-            .setControl(Control.newBuilder().setCancel(cancelled)).build());
-      }
-      return;
-    }
+		if (envelope.hasControl() && envelope.getControl().getCancel()) {
+			ListenableFuture<?> pending = pendingRequests.remove(envelope.getRequestId());
+			if (pending != null) {
+				boolean cancelled = pending.cancel(true);
+				context.channel().writeAndFlush(Envelope.newBuilder()
+						.setRequestId(envelope.getRequestId())
+						.setControl(Control.newBuilder().setCancel(cancelled)).build());
+			}
+			return;
+		}
 
-    Service service = services.lookupByName(envelope.getService());
-    if (service == null) {
-      serverLogger.logUnknownService(service);
-      logger.warning(String.format(
-          "Received request for unknown service %s", envelope.getService()));
-      context.channel().writeAndFlush(Envelope.newBuilder()
-          .setRequestId(envelope.getRequestId())
-          .setControl(Control.newBuilder()
-              .setError(String.format("Unknown service %s", envelope.getService())))
-          .build());
-      return;
-    }
+		Service service = services.lookupByName(envelope.getService());
+		if (service == null) {
+			serverLogger.logUnknownService(service);
+			logger.warning(String.format(
+					"Received request for unknown service %s", envelope.getService()));
+			context.channel().writeAndFlush(Envelope.newBuilder()
+					.setRequestId(envelope.getRequestId())
+					.setControl(Control.newBuilder()
+							.setError(String.format("Unknown service %s", envelope.getService())))
+					.build());
+			return;
+		}
 
-    ServerMethod<? extends Message, ? extends Message> method =
-        service.lookup(envelope.getMethod());
-    if (method == null) {
-      serverLogger.logUnknownMethod(service, envelope.getMethod());
-      logger.warning(String.format(
-          "Received request for unknown method %s/%s", envelope.getService(),
-          envelope.getMethod()));
-      context.channel().writeAndFlush(Envelope.newBuilder()
-          .setRequestId(envelope.getRequestId())
-          .setControl(Control.newBuilder()
-              .setError(
-                  String.format("Unknown method %s/%s", envelope.getService(),
-                      envelope.getMethod())))
-          .build());
-      return;
-    }
-    serverLogger.logMethodCall(service, method);
-    invoke(method, envelope.getPayload(), envelope.getRequestId(), context.channel());
-  }
+		ServerMethod<? extends Message, ? extends Message> method =
+				service.lookup(envelope.getMethod());
+		if (method == null) {
+			serverLogger.logUnknownMethod(service, envelope.getMethod());
+			logger.warning(String.format(
+					"Received request for unknown method %s/%s", envelope.getService(),
+					envelope.getMethod()));
+			context.channel().writeAndFlush(Envelope.newBuilder()
+					.setRequestId(envelope.getRequestId())
+					.setControl(Control.newBuilder()
+							.setError(
+									String.format("Unknown method %s/%s", envelope.getService(),
+											envelope.getMethod())))
+					.build());
+			return;
+		}
+		serverLogger.logMethodCall(service, method);
+		invoke(method, envelope.getPayload(), envelope.getRequestId(), context.channel());
+	}
 
-  /**
-   * Should be overridden by subclasses to refuse the processing of a given
-   * request.
-   *
-   * This implementation return {@code true} in all cases.
-   *
-   * @param request the received request
-   * @return {@code true} if the request should be processed, {@code false}
-   * otherwise.
-   */
-  protected boolean accept(I request) {
-    return true;
-  }
+	/**
+	 * Should be overridden by subclasses to refuse the processing of a given
+	 * request.
+	 * <p/>
+	 * This implementation return {@code true} in all cases.
+	 *
+	 * @param request the received request
+	 * @return {@code true} if the request should be processed, {@code false}
+	 * otherwise.
+	 */
+	protected boolean accept(I request) {
+		return true;
+	}
 
-  /**
-   * Performs a single method invocation.
-   *
-   * @param method the method to invoke
-   * @param payload the serialized parameter received from the client
-   * @param requestId the unique identifier of the request
-   * @param channel the channel to use for responding to the client
-   * @param <I> the type of the method's parameter
-   * @param <O> the return type of the method
-   */
-  private <I extends Message, O extends Message> void invoke(
-      ServerMethod<I, O> method, ByteString payload, long requestId, Channel channel) {
-    FutureCallback<O> callback = new ServerMethodCallback<>(method, requestId, channel);
-    try {
-      I request = method.inputParser().parseFrom(payload);
-      ListenableFuture<O> result = method.invoke(request);
-      pendingRequests.put(requestId, result);
-      Futures.addCallback(result, callback, responseCallbackExecutor);
-    } catch (InvalidProtocolBufferException ipbe) {
-      callback.onFailure(ipbe);
-    }
-  }
+	/**
+	 * Performs a single method invocation.
+	 *
+	 * @param method the method to invoke
+	 * @param payload the serialized parameter received from the client
+	 * @param requestId the unique identifier of the request
+	 * @param channel the channel to use for responding to the client
+	 * @param <I> the type of the method's parameter
+	 * @param <O> the return type of the method
+	 */
+	private <I extends Message, O extends Message> void invoke(
+			ServerMethod<I, O> method, ByteString payload, long requestId, Channel channel) {
+		FutureCallback<O> callback = new ServerMethodCallback<>(method, requestId, channel);
+		try {
+			I request = method.inputParser().parseFrom(payload);
+			ListenableFuture<O> result = method.invoke(request);
+			pendingRequests.put(requestId, result);
+			Futures.addCallback(result, callback, responseCallbackExecutor);
+		} catch (InvalidProtocolBufferException ipbe) {
+			callback.onFailure(ipbe);
+		}
+	}
 
-  @VisibleForTesting
-  public Map<Long, ListenableFuture<?>> pendingRequests() {
-    return pendingRequests;
-  }
+	@VisibleForTesting
+	public Map<Long, ListenableFuture<?>> pendingRequests() {
+		return pendingRequests;
+	}
 
-  /**
-   * Implemented by subclasses to convert the incoming request into an
-   * {@link Envelope}
-   *
-   * @param request the incoming request
-   */
-  protected abstract Envelope convertRequest(I request) throws RequestConversionException;
+	/**
+	 * Implemented by subclasses to convert the incoming request into an
+	 * {@link Envelope}
+	 *
+	 * @param request the incoming request
+	 */
+	protected abstract Envelope convertRequest(I request) throws RequestConversionException;
 
-  /**
-   * Implemented by subclasses to convert an outgoing response into their
-   * specific output type
-   *
-   * @param response the response to be converted into the output type
-   */
-  protected abstract O convertResponse(Envelope response);
+	/**
+	 * Implemented by subclasses to convert an outgoing response into their
+	 * specific output type
+	 *
+	 * @param response the response to be converted into the output type
+	 */
+	protected abstract O convertResponse(Envelope response);
 
-  /**
-   * Encapsulates the logic to execute when the invocation of a service
-   * method is done.
-   *
-   * @param <M> the method's return type
-   */
-  private class ServerMethodCallback<M extends Message> implements FutureCallback<M> {
+	/**
+	 * Encapsulates the logic to execute when the invocation of a service
+	 * method is done.
+	 *
+	 * @param <M> the method's return type
+	 */
+	private class ServerMethodCallback<M extends Message> implements FutureCallback<M> {
 
-    private final ServerMethod<?, M> serverMethod;
-    private final long requestId;
-    private final Channel channel;
+		private final ServerMethod<?, M> serverMethod;
+		private final long requestId;
+		private final Channel channel;
 
-    private ServerMethodCallback(ServerMethod<?, M> serverMethod, long requestId,
-        Channel channel) {
-      this.serverMethod = serverMethod;
-      this.requestId = requestId;
-      this.channel = channel;
-    }
+		private ServerMethodCallback(ServerMethod<?, M> serverMethod, long requestId,
+				Channel channel) {
+			this.serverMethod = serverMethod;
+			this.requestId = requestId;
+			this.channel = channel;
+		}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onSuccess(M result) {
-      serverLogger.logServerSuccess(serverMethod);
-      pendingRequests.remove(requestId);
-      Envelope response = Envelope.newBuilder()
-          .setPayload(result.toByteString())
-          .setRequestId(requestId)
-          .build();
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void onSuccess(M result) {
+			serverLogger.logServerSuccess(serverMethod);
+			pendingRequests.remove(requestId);
+			Envelope response = Envelope.newBuilder()
+					.setPayload(result.toByteString())
+					.setRequestId(requestId)
+					.build();
 
-      channel.writeAndFlush(convertResponse(response)).addListener(
-          new GenericFutureListener<ChannelFuture>() {
+			channel.writeAndFlush(convertResponse(response)).addListener(
+					new GenericFutureListener<ChannelFuture>() {
 
-            public void operationComplete(ChannelFuture future) {
-              if (!future.isSuccess()) {
-                serverLogger.logLinkFailure(serverMethod, future.cause());
-                logger.log(Level.WARNING,
-                    String.format("Failed to respond to client on %s ",
-                        channel.remoteAddress().toString()),
-                    future.cause());
-              }
-            }
+						public void operationComplete(ChannelFuture future) {
+							if (!future.isSuccess()) {
+								serverLogger.logLinkFailure(serverMethod, future.cause());
+								logger.log(Level.WARNING,
+										String.format("Failed to respond to client on %s ",
+												channel.remoteAddress().toString()),
+										future.cause());
+							}
+						}
 
-          });
-    }
+					});
+		}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onFailure(Throwable throwable) {
-      logger.info("Responding to client with failure");
-      serverLogger.logServerFailure(serverMethod, throwable);
-      pendingRequests.remove(requestId);
-      Control control = Control.newBuilder()
-          .setError(Throwables.getStackTraceAsString(throwable))
-          .build();
-      Envelope response = Envelope.newBuilder()
-          .setControl(control)
-          .build();
-      channel.writeAndFlush(convertResponse(response))
-          .addListener(new GenericFutureListener<ChannelFuture>() {
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void onFailure(Throwable throwable) {
+			logger.info("Responding to client with failure");
+			serverLogger.logServerFailure(serverMethod, throwable);
+			pendingRequests.remove(requestId);
+			Control control = Control.newBuilder()
+					.setError(Throwables.getStackTraceAsString(throwable))
+					.build();
+			Envelope response = Envelope.newBuilder()
+					.setControl(control)
+					.build();
+			channel.writeAndFlush(convertResponse(response))
+					.addListener(new GenericFutureListener<ChannelFuture>() {
 
-            public void operationComplete(ChannelFuture future) {
-              if (!future.isSuccess()) {
-                serverLogger.logLinkFailure(serverMethod, future.cause());
-                logger.warning(String.format(
-                    "Failed to respond to client on %s ", channel.remoteAddress().toString()));
-              }
-            }
+						public void operationComplete(ChannelFuture future) {
+							if (!future.isSuccess()) {
+								serverLogger.logLinkFailure(serverMethod, future.cause());
+								logger.warning(String.format(
+										"Failed to respond to client on %s ",
+										channel.remoteAddress().toString()));
+							}
+						}
 
-          });
-    }
+					});
+		}
 
-  }
+	}
 
-  /**
-   * Occurs when an incoming request couldn't be converted into an envelope.
-   */
-  protected static class RequestConversionException extends Exception {
-    private final Object request;
+	/**
+	 * Occurs when an incoming request couldn't be converted into an envelope.
+	 */
+	protected static class RequestConversionException extends Exception {
 
-    /**
-     * Exhaustive constructor.
-     *
-     * @param request the request that couldn't be converted
-     */
-    public RequestConversionException(Object request) {
-      this.request = request;
-    }
+		private final Object request;
 
-    /**
-     * Exhaustive constructor.
-     *
-     * @param request the request that couldn't be converted
-     * @param exception the underlying exception
-     */
-    public RequestConversionException(Object request, Throwable exception) {
-      super(exception);
-      this.request = request;
-    }
+		/**
+		 * Exhaustive constructor.
+		 *
+		 * @param request the request that couldn't be converted
+		 */
+		public RequestConversionException(Object request) {
+			this.request = request;
+		}
 
-    @Override
-    public String getMessage() {
-      return String.format("Could not convert incoming request: %s", request);
-    }
-  }
+		/**
+		 * Exhaustive constructor.
+		 *
+		 * @param request the request that couldn't be converted
+		 * @param exception the underlying exception
+		 */
+		public RequestConversionException(Object request, Throwable exception) {
+			super(exception);
+			this.request = request;
+		}
+
+		@Override
+		public String getMessage() {
+			return String.format("Could not convert incoming request: %s", request);
+		}
+	}
 }

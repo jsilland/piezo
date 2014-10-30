@@ -25,32 +25,32 @@ import com.google.protobuf.Message;
  */
 public class NullServerLogger implements ServerLogger {
 
-  @Override
-  public void logMethodCall(Service service, ServerMethod<? extends Message,
-      ? extends Message> method) {
-  }
+	@Override
+	public void logMethodCall(Service service, ServerMethod<? extends Message,
+			? extends Message> method) {
+	}
 
-  @Override
-  public void logServerFailure(ServerMethod<?, ?> serverMethod, Throwable throwable) {
-  }
+	@Override
+	public void logServerFailure(ServerMethod<?, ?> serverMethod, Throwable throwable) {
+	}
 
-  @Override
-  public void logLinkFailure(ServerMethod<?, ?> serverMethod, Throwable cause) {
-  }
+	@Override
+	public void logLinkFailure(ServerMethod<?, ?> serverMethod, Throwable cause) {
+	}
 
-  @Override
-  public void logServerSuccess(ServerMethod<?, ?> serverLogger) {
-  }
+	@Override
+	public void logServerSuccess(ServerMethod<?, ?> serverLogger) {
+	}
 
-  @Override
-  public void logUnknownService(Service service) {
-  }
+	@Override
+	public void logUnknownService(Service service) {
+	}
 
-  @Override
-  public void logClientError(Throwable throwable) {
-  }
+	@Override
+	public void logClientError(Throwable throwable) {
+	}
 
-  @Override
-  public void logUnknownMethod(Service service, String method) {
-  }
+	@Override
+	public void logUnknownMethod(Service service, String method) {
+	}
 }

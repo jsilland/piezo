@@ -29,23 +29,23 @@ import io.soliton.protobuf.ServiceGroup;
  */
 class RpcServerHandler extends EnvelopeServerHandler<Envelope, Envelope> {
 
-  RpcServerHandler(ServiceGroup serviceGroup, ServerLogger serverLogger) {
-    super(serviceGroup, serverLogger);
-  }
+	RpcServerHandler(ServiceGroup serviceGroup, ServerLogger serverLogger) {
+		super(serviceGroup, serverLogger);
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected Envelope convertRequest(Envelope request) throws RequestConversionException {
-    return request;
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected Envelope convertRequest(Envelope request) throws RequestConversionException {
+		return request;
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected Envelope convertResponse(Envelope response) {
-    return response;
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected Envelope convertResponse(Envelope response) {
+		return response;
+	}
 }

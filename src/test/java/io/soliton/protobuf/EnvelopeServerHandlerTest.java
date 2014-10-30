@@ -20,6 +20,9 @@ import io.soliton.protobuf.testing.TimeRequest;
 import io.soliton.protobuf.testing.TimeResponse;
 import io.soliton.protobuf.testing.TimeService;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.Message;
@@ -33,9 +36,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Tests for {@link io.soliton.protobuf.EnvelopeServerHandler}
  *
@@ -43,211 +43,214 @@ import java.util.concurrent.TimeUnit;
  */
 public class EnvelopeServerHandlerTest {
 
-  private static class IdentityServerHandler extends EnvelopeServerHandler<Envelope, Envelope> {
+	private static class IdentityServerHandler extends EnvelopeServerHandler<Envelope, Envelope> {
 
-    public IdentityServerHandler(ServiceGroup services, ServerLogger serverLogger) {
-      super(services, serverLogger);
-    }
+		public IdentityServerHandler(ServiceGroup services, ServerLogger serverLogger) {
+			super(services, serverLogger);
+		}
 
-    @Override
-    protected Envelope convertRequest(Envelope request) {
-      return request;
-    }
+		@Override
+		protected Envelope convertRequest(Envelope request) {
+			return request;
+		}
 
-    @Override
-    protected Envelope convertResponse(Envelope response) {
-      return response;
-    }
-  }
+		@Override
+		protected Envelope convertResponse(Envelope response) {
+			return response;
+		}
+	}
 
-  @Test
-  public void testNormalExecution() throws Exception {
-    Envelope request = Envelope.newBuilder()
-        .setRequestId(1L)
-        .setService("soliton.piezo.testing.TimeService")
-        .setMethod("GetTime")
-        .setPayload(TimeRequest.newBuilder().setTimezone("UTC").build().toByteString())
-        .build();
+	@Test
+	public void testNormalExecution() throws Exception {
+		Envelope request = Envelope.newBuilder()
+				.setRequestId(1L)
+				.setService("soliton.piezo.testing.TimeService")
+				.setMethod("GetTime")
+				.setPayload(TimeRequest.newBuilder().setTimezone("UTC").build().toByteString())
+				.build();
 
-    Channel channel = Mockito.mock(Channel.class);
-    ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
-    Mockito.when(context.channel()).thenReturn(channel);
+		Channel channel = Mockito.mock(Channel.class);
+		ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
+		Mockito.when(context.channel()).thenReturn(channel);
 
-    final CountDownLatch latch = new CountDownLatch(1);
-    final ServerMethod<TimeRequest, TimeResponse> serverMethod =
-        new ServerMethod<TimeRequest, TimeResponse>() {
-          @Override
-          public String name() {
-            return null;
-          }
+		final CountDownLatch latch = new CountDownLatch(1);
+		final ServerMethod<TimeRequest, TimeResponse> serverMethod =
+				new ServerMethod<TimeRequest, TimeResponse>() {
+					@Override
+					public String name() {
+						return null;
+					}
 
-          @Override
-          public Parser<TimeRequest> inputParser() {
-            return TimeRequest.PARSER;
-          }
+					@Override
+					public Parser<TimeRequest> inputParser() {
+						return TimeRequest.PARSER;
+					}
 
-          @Override
-          public Message.Builder inputBuilder() {
-            return null;
-          }
+					@Override
+					public Message.Builder inputBuilder() {
+						return null;
+					}
 
-          @Override
-          public ListenableFuture<TimeResponse> invoke(TimeRequest request) {
-            Assert.assertEquals("UTC", request.getTimezone());
-            latch.countDown();
-            return SettableFuture.create();
-          }
-        };
+					@Override
+					public ListenableFuture<TimeResponse> invoke(TimeRequest request) {
+						Assert.assertEquals("UTC", request.getTimezone());
+						latch.countDown();
+						return SettableFuture.create();
+					}
+				};
 
-    Answer<ServerMethod<TimeRequest, TimeResponse>> answer = new Answer<ServerMethod
-        <TimeRequest, TimeResponse>>() {
+		Answer<ServerMethod<TimeRequest, TimeResponse>> answer = new Answer<ServerMethod
+				<TimeRequest, TimeResponse>>() {
 
-      @Override
-      public ServerMethod<TimeRequest, TimeResponse> answer(
-          InvocationOnMock invocation) throws Throwable {
-        return serverMethod;
-      }
-    };
+			@Override
+			public ServerMethod<TimeRequest, TimeResponse> answer(
+					InvocationOnMock invocation) throws Throwable {
+				return serverMethod;
+			}
+		};
 
-    Service service = Mockito.mock(Service.class);
-    Mockito.when(service.fullName()).thenReturn("soliton.piezo.testing.TimeService");
-    Mockito.when(service.lookup(Mockito.anyString())).thenAnswer(answer);
-    ServiceGroup services = new DefaultServiceGroup();
-    services.addService(service);
-    EnvelopeServerHandler handler = new IdentityServerHandler(services, new NullServerLogger());
+		Service service = Mockito.mock(Service.class);
+		Mockito.when(service.fullName()).thenReturn("soliton.piezo.testing.TimeService");
+		Mockito.when(service.lookup(Mockito.anyString())).thenAnswer(answer);
+		ServiceGroup services = new DefaultServiceGroup();
+		services.addService(service);
+		EnvelopeServerHandler handler = new IdentityServerHandler(services,
+				new NullServerLogger());
 
-    handler.channelRead0(context, request);
+		handler.channelRead0(context, request);
 
-    latch.await(5, TimeUnit.SECONDS);
-    Assert.assertEquals(1, handler.pendingRequests().size());
-  }
+		latch.await(5, TimeUnit.SECONDS);
+		Assert.assertEquals(1, handler.pendingRequests().size());
+	}
 
-  @Test
-  public void testCancelRequest() throws Exception {
-    Envelope request = Envelope.newBuilder()
-        .setRequestId(1L)
-        .setService("soliton.piezo.testing.TimeService")
-        .setMethod("GetTime")
-        .setPayload(TimeRequest.newBuilder().setTimezone("UTC").build().toByteString())
-        .build();
+	@Test
+	public void testCancelRequest() throws Exception {
+		Envelope request = Envelope.newBuilder()
+				.setRequestId(1L)
+				.setService("soliton.piezo.testing.TimeService")
+				.setMethod("GetTime")
+				.setPayload(TimeRequest.newBuilder().setTimezone("UTC").build().toByteString())
+				.build();
 
-    Channel channel = Mockito.mock(Channel.class);
-    ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
-    Mockito.when(context.channel()).thenReturn(channel);
+		Channel channel = Mockito.mock(Channel.class);
+		ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
+		Mockito.when(context.channel()).thenReturn(channel);
 
-    final ListenableFuture<TimeResponse> future = Mockito.mock(ListenableFuture.class);
-    Mockito.when(future.cancel(Mockito.anyBoolean())).thenReturn(true);
+		final ListenableFuture<TimeResponse> future = Mockito.mock(ListenableFuture.class);
+		Mockito.when(future.cancel(Mockito.anyBoolean())).thenReturn(true);
 
-    final ServerMethod<TimeRequest, TimeResponse> serverMethod =
-        new ServerMethod<TimeRequest, TimeResponse>() {
-          @Override
-          public String name() {
-            return null;
-          }
+		final ServerMethod<TimeRequest, TimeResponse> serverMethod =
+				new ServerMethod<TimeRequest, TimeResponse>() {
+					@Override
+					public String name() {
+						return null;
+					}
 
-          @Override
-          public Parser<TimeRequest> inputParser() {
-            return TimeRequest.PARSER;
-          }
+					@Override
+					public Parser<TimeRequest> inputParser() {
+						return TimeRequest.PARSER;
+					}
 
-          @Override
-          public Message.Builder inputBuilder() {
-            return null;
-          }
+					@Override
+					public Message.Builder inputBuilder() {
+						return null;
+					}
 
-          @Override
-          public ListenableFuture<TimeResponse> invoke(TimeRequest request) {
-            return future;
-          }
-        };
+					@Override
+					public ListenableFuture<TimeResponse> invoke(TimeRequest request) {
+						return future;
+					}
+				};
 
-    Answer<ServerMethod<TimeRequest, TimeResponse>> answer = new Answer<ServerMethod
-        <TimeRequest, TimeResponse>>() {
+		Answer<ServerMethod<TimeRequest, TimeResponse>> answer = new Answer<ServerMethod
+				<TimeRequest, TimeResponse>>() {
 
-      @Override
-      public ServerMethod<TimeRequest, TimeResponse> answer(
-          InvocationOnMock invocation) throws Throwable {
-        return serverMethod;
-      }
-    };
+			@Override
+			public ServerMethod<TimeRequest, TimeResponse> answer(
+					InvocationOnMock invocation) throws Throwable {
+				return serverMethod;
+			}
+		};
 
-    Service service = Mockito.mock(Service.class);
-    Mockito.when(service.fullName()).thenReturn("soliton.piezo.testing.TimeService");
-    Mockito.when(service.lookup(Mockito.anyString())).thenAnswer(answer);
-    ServiceGroup services = new DefaultServiceGroup();
-    services.addService(service);
-    EnvelopeServerHandler handler = new IdentityServerHandler(services, new NullServerLogger());
+		Service service = Mockito.mock(Service.class);
+		Mockito.when(service.fullName()).thenReturn("soliton.piezo.testing.TimeService");
+		Mockito.when(service.lookup(Mockito.anyString())).thenAnswer(answer);
+		ServiceGroup services = new DefaultServiceGroup();
+		services.addService(service);
+		EnvelopeServerHandler handler = new IdentityServerHandler(services,
+				new NullServerLogger());
 
-    handler.channelRead0(context, request);
+		handler.channelRead0(context, request);
 
-    Envelope cancel = Envelope.newBuilder()
-        .setRequestId(1L)
-        .setControl(Control.newBuilder().setCancel(true))
-        .build();
+		Envelope cancel = Envelope.newBuilder()
+				.setRequestId(1L)
+				.setControl(Control.newBuilder().setCancel(true))
+				.build();
 
-    handler.channelRead0(context, cancel);
-    Mockito.verify(future).cancel(true);
+		handler.channelRead0(context, cancel);
+		Mockito.verify(future).cancel(true);
 
-    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-    Mockito.verify(channel).writeAndFlush(captor.capture());
-    Object captured = captor.getValue();
-    Assert.assertTrue(captured instanceof Envelope);
-    Envelope response = (Envelope) captured;
-    Assert.assertEquals(1L, response.getRequestId());
-    Assert.assertTrue(response.getControl().getCancel());
-  }
+		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(channel).writeAndFlush(captor.capture());
+		Object captured = captor.getValue();
+		Assert.assertTrue(captured instanceof Envelope);
+		Envelope response = (Envelope) captured;
+		Assert.assertEquals(1L, response.getRequestId());
+		Assert.assertTrue(response.getControl().getCancel());
+	}
 
-  @Test
-  public void testUnknownService() throws Exception {
-    Envelope request = Envelope.newBuilder()
-        .setRequestId(1L)
-        .setService("Unknown")
-        .build();
-    Channel channel = Mockito.mock(Channel.class);
-    ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
-    Mockito.when(context.channel()).thenReturn(channel);
+	@Test
+	public void testUnknownService() throws Exception {
+		Envelope request = Envelope.newBuilder()
+				.setRequestId(1L)
+				.setService("Unknown")
+				.build();
+		Channel channel = Mockito.mock(Channel.class);
+		ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
+		Mockito.when(context.channel()).thenReturn(channel);
 
-    EnvelopeServerHandler handler = new IdentityServerHandler(
-        new DefaultServiceGroup(), new NullServerLogger());
-    handler.channelRead0(context, request);
+		EnvelopeServerHandler handler = new IdentityServerHandler(
+				new DefaultServiceGroup(), new NullServerLogger());
+		handler.channelRead0(context, request);
 
-    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-    Mockito.verify(channel).writeAndFlush(captor.capture());
+		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(channel).writeAndFlush(captor.capture());
 
-    Object captured = captor.getValue();
-    Assert.assertTrue(captured instanceof Envelope);
-    Envelope response = (Envelope) captured;
-    Assert.assertTrue(response.hasControl());
-    Assert.assertTrue(response.getControl().hasError());
-    Assert.assertTrue(response.getControl().getError().contains("service"));
-  }
+		Object captured = captor.getValue();
+		Assert.assertTrue(captured instanceof Envelope);
+		Envelope response = (Envelope) captured;
+		Assert.assertTrue(response.hasControl());
+		Assert.assertTrue(response.getControl().hasError());
+		Assert.assertTrue(response.getControl().getError().contains("service"));
+	}
 
-  @Test
-  public void testUnkownMethod() throws Exception {
-    Service timeService = TimeService.newService(new TimeServer());
-    Envelope request = Envelope.newBuilder()
-        .setRequestId(1L)
-        .setService(timeService.fullName())
-        .setMethod("Unknown")
-        .build();
-    Channel channel = Mockito.mock(Channel.class);
-    ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
-    Mockito.when(context.channel()).thenReturn(channel);
+	@Test
+	public void testUnkownMethod() throws Exception {
+		Service timeService = TimeService.newService(new TimeServer());
+		Envelope request = Envelope.newBuilder()
+				.setRequestId(1L)
+				.setService(timeService.fullName())
+				.setMethod("Unknown")
+				.build();
+		Channel channel = Mockito.mock(Channel.class);
+		ChannelHandlerContext context = Mockito.mock(ChannelHandlerContext.class);
+		Mockito.when(context.channel()).thenReturn(channel);
 
-    ServiceGroup services = new DefaultServiceGroup();
-    services.addService(timeService);
+		ServiceGroup services = new DefaultServiceGroup();
+		services.addService(timeService);
 
-    EnvelopeServerHandler handler = new IdentityServerHandler(services, new NullServerLogger());
-    handler.channelRead0(context, request);
+		EnvelopeServerHandler handler = new IdentityServerHandler(services,
+				new NullServerLogger());
+		handler.channelRead0(context, request);
 
-    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-    Mockito.verify(channel).writeAndFlush(captor.capture());
+		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(channel).writeAndFlush(captor.capture());
 
-    Object captured = captor.getValue();
-    Assert.assertTrue(captured instanceof Envelope);
-    Envelope response = (Envelope) captured;
-    Assert.assertTrue(response.hasControl());
-    Assert.assertTrue(response.getControl().hasError());
-    Assert.assertTrue(response.getControl().getError().contains("method"));
-  }
+		Object captured = captor.getValue();
+		Assert.assertTrue(captured instanceof Envelope);
+		Envelope response = (Envelope) captured;
+		Assert.assertTrue(response.hasControl());
+		Assert.assertTrue(response.getControl().hasError());
+		Assert.assertTrue(response.getControl().getError().contains("method"));
+	}
 }

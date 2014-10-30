@@ -16,25 +16,16 @@
 
 package io.soliton.protobuf.json;
 
-import io.soliton.protobuf.ServerMethod;
-import io.soliton.protobuf.Service;
-import io.soliton.protobuf.ServiceGroup;
+import java.util.List;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.google.protobuf.Message;
 import io.netty.handler.codec.http.HttpResponseStatus;
-
-import java.util.List;
 
 /**
  * Structured representation of a JSON-RPC request.
@@ -43,143 +34,144 @@ import java.util.List;
  */
 class JsonRpcRequest {
 
-  private static final Joiner DOT_JOINER = Joiner.on('.');
-  private static final Splitter DOT_SPLITTER = Splitter.on('.').trimResults().omitEmptyStrings();
+	private static final Joiner DOT_JOINER = Joiner.on('.');
+	private static final Splitter DOT_SPLITTER = Splitter.on('.').trimResults().omitEmptyStrings();
 
 
-  private final String service;
-  private final String method;
-  private final JsonElement id;
-  private final JsonObject parameter;
+	private final String service;
+	private final String method;
+	private final JsonElement id;
+	private final JsonObject parameter;
 
-  /**
-   * Exhaustive constructor
-   *
-   * @param service the service this call is targeting
-   * @param method the method this call is targeting
-   * @param id the generic identifier of the request, as set by the client
-   * @param parameter the sole parameter of this call
-   */
-  public JsonRpcRequest(String service, String method, JsonElement id,
-      JsonObject parameter) {
-    this.service = service;
-    this.method = method;
-    this.id = id;
-    this.parameter = parameter;
-  }
+	/**
+	 * Exhaustive constructor
+	 *
+	 * @param service the service this call is targeting
+	 * @param method the method this call is targeting
+	 * @param id the generic identifier of the request, as set by the client
+	 * @param parameter the sole parameter of this call
+	 */
+	public JsonRpcRequest(String service, String method, JsonElement id,
+			JsonObject parameter) {
+		this.service = service;
+		this.method = method;
+		this.id = id;
+		this.parameter = parameter;
+	}
 
-  public String service() {
-    return service;
-  }
+	public String service() {
+		return service;
+	}
 
-  public String method() {
-    return method;
-  }
+	public String method() {
+		return method;
+	}
 
-  public JsonElement id() {
-    return id;
-  }
+	public JsonElement id() {
+		return id;
+	}
 
-  public JsonObject parameter() {
-    return parameter;
-  }
+	public JsonObject parameter() {
+		return parameter;
+	}
 
-  public JsonObject toJson() {
-    JsonObject request = new JsonObject();
-    request.add(JsonRpcProtocol.ID, id());
-    request.add(JsonRpcProtocol.METHOD, new JsonPrimitive(DOT_JOINER.join(service(), method())));
-    JsonArray params = new JsonArray();
-    params.add(parameter());
-    request.add(JsonRpcProtocol.PARAMETERS, params);
-    return request;
-  }
+	public JsonObject toJson() {
+		JsonObject request = new JsonObject();
+		request.add(JsonRpcProtocol.ID, id());
+		request.add(JsonRpcProtocol.METHOD,
+				new JsonPrimitive(DOT_JOINER.join(service(), method())));
+		JsonArray params = new JsonArray();
+		params.add(parameter());
+		request.add(JsonRpcProtocol.PARAMETERS, params);
+		return request;
+	}
 
-  public static JsonRpcRequest fromJson(JsonElement root) throws JsonRpcError {
-    if (!root.isJsonObject()) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "Received payload is not a JSON Object");
-    }
+	public static JsonRpcRequest fromJson(JsonElement root) throws JsonRpcError {
+		if (!root.isJsonObject()) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"Received payload is not a JSON Object");
+		}
 
-    JsonObject request = root.getAsJsonObject();
-    JsonElement id = request.get(JsonRpcProtocol.ID);
-    JsonElement methodNameElement = request.get(JsonRpcProtocol.METHOD);
-    JsonElement paramsElement = request.get(JsonRpcProtocol.PARAMETERS);
+		JsonObject request = root.getAsJsonObject();
+		JsonElement id = request.get(JsonRpcProtocol.ID);
+		JsonElement methodNameElement = request.get(JsonRpcProtocol.METHOD);
+		JsonElement paramsElement = request.get(JsonRpcProtocol.PARAMETERS);
 
-    if (id == null) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "Malformed request, missing 'id' property");
-    }
+		if (id == null) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"Malformed request, missing 'id' property");
+		}
 
-    if (methodNameElement == null) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "Malformed request, missing 'method' property");
-    }
+		if (methodNameElement == null) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"Malformed request, missing 'method' property");
+		}
 
-    if (paramsElement == null) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "Malformed request, missing 'params' property");
-    }
-
-
-    if (!methodNameElement.isJsonPrimitive()) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "Method name is not a JSON primitive");
-    }
-
-    JsonPrimitive methodName = methodNameElement.getAsJsonPrimitive();
-    if (!methodName.isString()) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "Method name is not a string");
-    }
-
-    if (!paramsElement.isJsonArray()) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "'params' property is not an array");
-    }
-
-    JsonArray params = paramsElement.getAsJsonArray();
-    if (params.size() != 1) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "'params' property is not an array");
-    }
-
-    JsonElement paramElement = params.get(0);
-    if (!paramElement.isJsonObject()) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "Parameter is not an object");
-    }
-
-    JsonObject parameter = paramElement.getAsJsonObject();
-    List<String> serviceAndMethod = Lists.newArrayList(DOT_SPLITTER.split(
-        methodName.getAsString()));
+		if (paramsElement == null) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"Malformed request, missing 'params' property");
+		}
 
 
-    String methodNameString = methodName.getAsString();
-    int dotIndex = methodNameString.lastIndexOf('.');
+		if (!methodNameElement.isJsonPrimitive()) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"Method name is not a JSON primitive");
+		}
 
-    if (dotIndex < 0) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "'method' property is not properly formatted");
-    }
+		JsonPrimitive methodName = methodNameElement.getAsJsonPrimitive();
+		if (!methodName.isString()) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"Method name is not a string");
+		}
 
-    if (dotIndex == methodNameString.length() - 1) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "'method' property is not properly formatted");
-    }
+		if (!paramsElement.isJsonArray()) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"'params' property is not an array");
+		}
 
-    String service = methodNameString.substring(0, dotIndex);
-    String method = methodNameString.substring(dotIndex + 1);
+		JsonArray params = paramsElement.getAsJsonArray();
+		if (params.size() != 1) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"'params' property is not an array");
+		}
 
-    if (service.isEmpty() || method.isEmpty()) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "'method' property is not properly formatted");
-    }
+		JsonElement paramElement = params.get(0);
+		if (!paramElement.isJsonObject()) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"Parameter is not an object");
+		}
 
-    if (serviceAndMethod.size() < 2) {
-      throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
-          "'method' property is not properly formatted");
-    }
+		JsonObject parameter = paramElement.getAsJsonObject();
+		List<String> serviceAndMethod = Lists.newArrayList(DOT_SPLITTER.split(
+				methodName.getAsString()));
 
-    return new JsonRpcRequest(service, method, id, parameter);
-  }
+
+		String methodNameString = methodName.getAsString();
+		int dotIndex = methodNameString.lastIndexOf('.');
+
+		if (dotIndex < 0) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"'method' property is not properly formatted");
+		}
+
+		if (dotIndex == methodNameString.length() - 1) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"'method' property is not properly formatted");
+		}
+
+		String service = methodNameString.substring(0, dotIndex);
+		String method = methodNameString.substring(dotIndex + 1);
+
+		if (service.isEmpty() || method.isEmpty()) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"'method' property is not properly formatted");
+		}
+
+		if (serviceAndMethod.size() < 2) {
+			throw new JsonRpcError(HttpResponseStatus.BAD_REQUEST,
+					"'method' property is not properly formatted");
+		}
+
+		return new JsonRpcRequest(service, method, id, parameter);
+	}
 }

@@ -32,9 +32,9 @@ package io.soliton.protobuf;
  */
 public interface Server {
 
-  /**
-   * Returns the service group in which the services hosted by this server
-   * are kept.
-   */
-  public ServiceGroup serviceGroup();
+	/**
+	 * Returns the service group in which the services hosted by this server
+	 * are kept.
+	 */
+	public ServiceGroup serviceGroup();
 }

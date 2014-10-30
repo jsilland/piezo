@@ -16,10 +16,10 @@
 
 package io.soliton.protobuf.plugin;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-
-import javax.annotation.Nullable;
 
 /**
  * Represents a fully qualified Java type.
@@ -28,27 +28,28 @@ import javax.annotation.Nullable;
  */
 public class JavaType {
 
-  private static final Joiner DOT = Joiner.on('.').skipNulls();
+	private static final Joiner DOT = Joiner.on('.').skipNulls();
 
-  private final String javaPackage;
-  private final String enclosingClass;
-  private final String className;
+	private final String javaPackage;
+	private final String enclosingClass;
+	private final String className;
 
-  /**
-   * Exhaustive constructor.
-   *
-   * @param javaPackage the type's package, may be {@code null}
-   * @param enclosingClass the type's enclosing class, may be {@code null}
-   * @param className the type's name
-   */
-  public JavaType(@Nullable String javaPackage, @Nullable String enclosingClass, String className) {
-    this.className = Preconditions.checkNotNull(className);
-    this.javaPackage = javaPackage;
-    this.enclosingClass = enclosingClass;
-  }
+	/**
+	 * Exhaustive constructor.
+	 *
+	 * @param javaPackage the type's package, may be {@code null}
+	 * @param enclosingClass the type's enclosing class, may be {@code null}
+	 * @param className the type's name
+	 */
+	public JavaType(@Nullable String javaPackage, @Nullable String enclosingClass,
+			String className) {
+		this.className = Preconditions.checkNotNull(className);
+		this.javaPackage = javaPackage;
+		this.enclosingClass = enclosingClass;
+	}
 
-  @Override
-  public String toString() {
-    return DOT.join(javaPackage, enclosingClass, className);
-  }
+	@Override
+	public String toString() {
+		return DOT.join(javaPackage, enclosingClass, className);
+	}
 }

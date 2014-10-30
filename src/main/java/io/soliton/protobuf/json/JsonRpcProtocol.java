@@ -23,12 +23,12 @@ package io.soliton.protobuf.json;
  */
 class JsonRpcProtocol {
 
-  public static final String DEFAULT_RPC_PATH = "/rpc";
-  public static final String CONTENT_TYPE = "application/json";
-  public static final String ID = "id";
-  public static final String ERROR = "error";
-  public static final String METHOD = "method";
-  public static final String PARAMETERS = "params";
-  public static final String RESULT = "result";
+	public static final String DEFAULT_RPC_PATH = "/rpc";
+	public static final String CONTENT_TYPE = "application/json";
+	public static final String ID = "id";
+	public static final String ERROR = "error";
+	public static final String METHOD = "method";
+	public static final String PARAMETERS = "params";
+	public static final String RESULT = "result";
 
 }

@@ -27,13 +27,13 @@ import io.soliton.protobuf.EnvelopeClientHandler;
  */
 class RpcClientHandler extends EnvelopeClientHandler<Envelope, Envelope> {
 
-  @Override
-  public Envelope convertRequest(Envelope request) {
-    return request;
-  }
+	@Override
+	public Envelope convertRequest(Envelope request) {
+		return request;
+	}
 
-  @Override
-  public Envelope convertResponse(Envelope response) throws ResponseConversionException {
-    return response;
-  }
+	@Override
+	public Envelope convertResponse(Envelope response) throws ResponseConversionException {
+		return response;
+	}
 }

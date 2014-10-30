@@ -29,11 +29,11 @@ import com.google.common.util.concurrent.ListenableFuture;
  */
 public final class DnsServer implements TestingSingleFile.Dns.Interface {
 
-  @Override
-  public ListenableFuture<DnsResponse> resolve(
-      TestingSingleFile.DnsRequest request) {
-    DnsResponse response = DnsResponse.newBuilder()
-        .setIpAddress(1234567).build();
-    return Futures.immediateFuture(response);
-  }
+	@Override
+	public ListenableFuture<DnsResponse> resolve(
+			TestingSingleFile.DnsRequest request) {
+		DnsResponse response = DnsResponse.newBuilder()
+				.setIpAddress(1234567).build();
+		return Futures.immediateFuture(response);
+	}
 }

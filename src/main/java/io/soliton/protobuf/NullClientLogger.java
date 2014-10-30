@@ -24,28 +24,29 @@ import com.google.protobuf.Message;
  * @author Julien Silland (julien@soliton.io)
  */
 public class NullClientLogger implements ClientLogger {
-  @Override
-  public void logMethodCall(ClientMethod<?> method) {
 
-  }
+	@Override
+	public void logMethodCall(ClientMethod<?> method) {
 
-  @Override
-  public void logClientError(ClientMethod<?> method, Throwable cause) {
+	}
 
-  }
+	@Override
+	public void logClientError(ClientMethod<?> method, Throwable cause) {
 
-  @Override
-  public void logServerError(String serviceName, String methodName, Throwable cause) {
+	}
 
-  }
+	@Override
+	public void logServerError(String serviceName, String methodName, Throwable cause) {
 
-  @Override
-  public <O extends Message> void logLinkError(ClientMethod<O> method, Throwable cause) {
+	}
 
-  }
+	@Override
+	public <O extends Message> void logLinkError(ClientMethod<O> method, Throwable cause) {
 
-  @Override
-  public <O extends Message> void logSuccess(ClientMethod<O> clientMethod) {
+	}
 
-  }
+	@Override
+	public <O extends Message> void logSuccess(ClientMethod<O> clientMethod) {
+
+	}
 }

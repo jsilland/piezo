@@ -1,48 +1,49 @@
 package soliton.piezo.testing;
 
 option java_package = "io.soliton.protobuf.testing";
+
 option java_multiple_files = true;
 
 message All {
-  enum Foo {
-    BAR = 0;
-    BAZ = 1;
-    QUX = 2;
-  }
+	enum Foo {
+		BAR = 0;
+		BAZ = 1;
+		QUX = 2;
+	}
 
-  optional string string = 1;
-  optional double double = 2;
-  optional float float = 3;
-  optional int32 int32 = 4;
-  optional int64 int64 = 5;
-  optional uint32 uint32 = 6;
-  optional uint64 uint64 = 7;
-  optional sint32 sint32 = 8;
-  optional sint64 sint64 = 9;
-  optional fixed32 fixed32 = 10;
-  optional fixed64 fixed64 = 11;
-  optional sfixed32 sfixed32 = 12;
-  optional sfixed64 sfixed64 = 13;
-  optional bool bool = 14;
-  optional bytes bytes = 15;
-  optional All message = 16;
-  optional Foo foo = 17;
+	optional string string = 1;
+	optional double double = 2;
+	optional float float = 3;
+	optional int32 int32 = 4;
+	optional int64 int64 = 5;
+	optional uint32 uint32 = 6;
+	optional uint64 uint64 = 7;
+	optional sint32 sint32 = 8;
+	optional sint64 sint64 = 9;
+	optional fixed32 fixed32 = 10;
+	optional fixed64 fixed64 = 11;
+	optional sfixed32 sfixed32 = 12;
+	optional sfixed64 sfixed64 = 13;
+	optional bool bool = 14;
+	optional bytes bytes = 15;
+	optional All message = 16;
+	optional Foo foo = 17;
 
-  repeated string repeated_string = 101;
-  repeated double repeated_double = 102;
-  repeated float repeated_float = 103;
-  repeated int32 repeated_int32 = 104;
-  repeated int64 repeated_int64 = 105;
-  repeated uint32 repeated_uint32 = 106;
-  repeated uint64 repeated_uint64 = 107;
-  repeated sint32 repeated_sint32 = 108;
-  repeated sint64 repeated_sint64 = 109;
-  repeated fixed32 repeated_fixed32 = 110;
-  repeated fixed64 repeated_fixed64 = 111;
-  repeated sfixed32 repeated_sfixed32 = 112;
-  repeated sfixed64 repeated_sfixed64 = 113;
-  repeated bool repeated_bool = 114;
-  repeated bytes repeated_bytes = 115;
-  repeated All repeated_message = 116;
-  repeated Foo repeated_foo = 117;
+	repeated string repeated_string = 101;
+	repeated double repeated_double = 102;
+	repeated float repeated_float = 103;
+	repeated int32 repeated_int32 = 104;
+	repeated int64 repeated_int64 = 105;
+	repeated uint32 repeated_uint32 = 106;
+	repeated uint64 repeated_uint64 = 107;
+	repeated sint32 repeated_sint32 = 108;
+	repeated sint64 repeated_sint64 = 109;
+	repeated fixed32 repeated_fixed32 = 110;
+	repeated fixed64 repeated_fixed64 = 111;
+	repeated sfixed32 repeated_sfixed32 = 112;
+	repeated sfixed64 repeated_sfixed64 = 113;
+	repeated bool repeated_bool = 114;
+	repeated bytes repeated_bytes = 115;
+	repeated All repeated_message = 116;
+	repeated Foo repeated_foo = 117;
 }

@@ -33,59 +33,59 @@ import com.google.protobuf.Message;
  */
 public final class JsonResponseFuture<V extends Message> extends AbstractFuture<V> {
 
-  private final long requestId;
-  private final ClientMethod<V> method;
+	private final long requestId;
+	private final ClientMethod<V> method;
 
-  public JsonResponseFuture(long requestId, ClientMethod<V> method) {
-    this.requestId = requestId;
-    this.method = method;
-  }
+	public JsonResponseFuture(long requestId, ClientMethod<V> method) {
+		this.requestId = requestId;
+		this.method = method;
+	}
 
-  /**
-   * Sets the JSON response of this promise.
-   *
-   * @param response the RPC response
-   */
-  public void setResponse(JsonRpcResponse response) {
-    if (response.isError()) {
-      setException(response.error());
-      return;
-    }
+	/**
+	 * Sets the JSON response of this promise.
+	 *
+	 * @param response the RPC response
+	 */
+	public void setResponse(JsonRpcResponse response) {
+		if (response.isError()) {
+			setException(response.error());
+			return;
+		}
 
-    try {
-      set((V) Messages.fromJson(method.outputBuilder(), response.result()));
-    } catch (Exception e) {
-      setException(e);
-    }
-  }
+		try {
+			set((V) Messages.fromJson(method.outputBuilder(), response.result()));
+		} catch (Exception e) {
+			setException(e);
+		}
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean set(V value) {
-    return super.set(value);
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean set(V value) {
+		return super.set(value);
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected boolean setException(Throwable throwable) {
-    return super.setException(throwable);
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean setException(Throwable throwable) {
+		return super.setException(throwable);
+	}
 
-  /**
-   * Returns the identifier of the request to which this response responds to.
-   */
-  public long requestId() {
-    return requestId;
-  }
+	/**
+	 * Returns the identifier of the request to which this response responds to.
+	 */
+	public long requestId() {
+		return requestId;
+	}
 
-  /**
-   * Returns the method for which this response holder was created.
-   */
-  public ClientMethod<V> method() {
-    return method;
-  }
+	/**
+	 * Returns the method for which this response holder was created.
+	 */
+	public ClientMethod<V> method() {
+		return method;
+	}
 }

@@ -20,6 +20,11 @@ import io.soliton.protobuf.Service;
 import io.soliton.protobuf.TimeServer;
 import io.soliton.protobuf.testing.TimeService;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.ServerSocket;
+
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -39,11 +44,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.ServerSocket;
-
 /**
  * Integration test for the JSON-RPC handler.
  *
@@ -51,251 +51,251 @@ import java.net.ServerSocket;
  */
 public class HttpJsonRpcServerTest {
 
-  private static int port;
-  private static HttpJsonRpcServer server;
+	private static int port;
+	private static HttpJsonRpcServer server;
 
-  private static int findAvailablePort() throws IOException {
-    ServerSocket socket = new ServerSocket(0);
-    port = socket.getLocalPort();
-    socket.close();
-    return port;
-  }
+	private static int findAvailablePort() throws IOException {
+		ServerSocket socket = new ServerSocket(0);
+		port = socket.getLocalPort();
+		socket.close();
+		return port;
+	}
 
-  @BeforeClass
-  public static void setUp() throws Exception {
-    server = HttpJsonRpcServer.newServer(findAvailablePort()).build();
-    Service timeService = TimeService.newService(new TimeServer());
-    server.serviceGroup().addService(timeService);
-    server.start();
-  }
+	@BeforeClass
+	public static void setUp() throws Exception {
+		server = HttpJsonRpcServer.newServer(findAvailablePort()).build();
+		Service timeService = TimeService.newService(new TimeServer());
+		server.serviceGroup().addService(timeService);
+		server.start();
+	}
 
-  @AfterClass
-  public static void tearDown() {
-    server.stop();
-  }
+	@AfterClass
+	public static void tearDown() {
+		server.stop();
+	}
 
-  @Test
-  public void testWrongPath() throws IOException {
-    JsonObject request = new JsonObject();
-    request.addProperty("method", "TimeService.GetTime");
-    request.addProperty("id", "identifier");
-    JsonObject parameter = new JsonObject();
-    parameter.addProperty("timezone", DateTimeZone.UTC.getID());
-    JsonArray parameters = new JsonArray();
-    parameters.add(parameter);
-    request.add("params", parameters);
+	@Test
+	public void testWrongPath() throws IOException {
+		JsonObject request = new JsonObject();
+		request.addProperty("method", "TimeService.GetTime");
+		request.addProperty("id", "identifier");
+		JsonObject parameter = new JsonObject();
+		parameter.addProperty("timezone", DateTimeZone.UTC.getID());
+		JsonArray parameters = new JsonArray();
+		parameters.add(parameter);
+		request.add("params", parameters);
 
-    HttpContent httpContent = new ByteArrayContent("application/json",
-        new Gson().toJson(request).getBytes(Charsets.UTF_8));
+		HttpContent httpContent = new ByteArrayContent("application/json",
+				new Gson().toJson(request).getBytes(Charsets.UTF_8));
 
-    GenericUrl url = new GenericUrl();
-    url.setScheme("http");
-    url.setHost("localhost");
-    url.setPort(port);
-    url.setRawPath("/tox");
+		GenericUrl url = new GenericUrl();
+		url.setScheme("http");
+		url.setHost("localhost");
+		url.setPort(port);
+		url.setRawPath("/tox");
 
-    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-    HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
+		HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+		HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
 
-    HttpResponse httpResponse = httpRequest.execute();
-    Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
-    Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
+		HttpResponse httpResponse = httpRequest.execute();
+		Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
+		Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
 
-    JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
-        .getAsJsonObject());
+		JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
+				.getAsJsonObject());
 
-    Assert.assertTrue(response.isError());
-    Assert.assertEquals(404, response.error().status().code());
-  }
+		Assert.assertTrue(response.isError());
+		Assert.assertEquals(404, response.error().status().code());
+	}
 
-  @Test
-  public void testMissingBody() throws IOException {
-    HttpContent httpContent = new ByteArrayContent("application/json",
-        new byte[]{});
+	@Test
+	public void testMissingBody() throws IOException {
+		HttpContent httpContent = new ByteArrayContent("application/json",
+				new byte[] {});
 
-    GenericUrl url = new GenericUrl();
-    url.setScheme("http");
-    url.setHost("localhost");
-    url.setPort(port);
-    url.setRawPath("/tox");
+		GenericUrl url = new GenericUrl();
+		url.setScheme("http");
+		url.setHost("localhost");
+		url.setPort(port);
+		url.setRawPath("/tox");
 
-    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-    HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
+		HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+		HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
 
-    HttpResponse httpResponse = httpRequest.execute();
-    Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
-    Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
+		HttpResponse httpResponse = httpRequest.execute();
+		Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
+		Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
 
-    JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
-        .getAsJsonObject());
+		JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
+				.getAsJsonObject());
 
-    Assert.assertTrue(response.isError());
-    Assert.assertEquals(400, response.error().status().code());
-  }
+		Assert.assertTrue(response.isError());
+		Assert.assertEquals(400, response.error().status().code());
+	}
 
-  @Test
-  public void testWrongHttpMethod() throws IOException {
-    JsonObject request = new JsonObject();
-    request.addProperty("method", "TimeService.GetTime");
-    request.addProperty("id", "identifier");
-    JsonObject parameter = new JsonObject();
-    parameter.addProperty("timezone", DateTimeZone.UTC.getID());
-    JsonArray parameters = new JsonArray();
-    parameters.add(parameter);
-    request.add("params", parameters);
+	@Test
+	public void testWrongHttpMethod() throws IOException {
+		JsonObject request = new JsonObject();
+		request.addProperty("method", "TimeService.GetTime");
+		request.addProperty("id", "identifier");
+		JsonObject parameter = new JsonObject();
+		parameter.addProperty("timezone", DateTimeZone.UTC.getID());
+		JsonArray parameters = new JsonArray();
+		parameters.add(parameter);
+		request.add("params", parameters);
 
-    HttpContent httpContent = new ByteArrayContent("application/json",
-        new Gson().toJson(request).getBytes(Charsets.UTF_8));
+		HttpContent httpContent = new ByteArrayContent("application/json",
+				new Gson().toJson(request).getBytes(Charsets.UTF_8));
 
-    GenericUrl url = new GenericUrl();
-    url.setScheme("http");
-    url.setHost("localhost");
-    url.setPort(port);
-    url.setRawPath("/rpc");
+		GenericUrl url = new GenericUrl();
+		url.setScheme("http");
+		url.setHost("localhost");
+		url.setPort(port);
+		url.setRawPath("/rpc");
 
-    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-    HttpRequest httpRequest = requestFactory.buildPutRequest(url, httpContent);
+		HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+		HttpRequest httpRequest = requestFactory.buildPutRequest(url, httpContent);
 
-    HttpResponse httpResponse = httpRequest.execute();
-    Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
-    Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
+		HttpResponse httpResponse = httpRequest.execute();
+		Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
+		Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
 
-    JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
-        .getAsJsonObject());
+		JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
+				.getAsJsonObject());
 
-    Assert.assertTrue(response.isError());
-    Assert.assertEquals(405, response.error().status().code());
-  }
+		Assert.assertTrue(response.isError());
+		Assert.assertEquals(405, response.error().status().code());
+	}
 
-  @Test
-  public void testMissingService() throws IOException {
-    JsonObject request = new JsonObject();
-    request.addProperty("method", ".GetTime");
-    request.addProperty("id", "identifier");
-    JsonObject parameter = new JsonObject();
-    parameter.addProperty("timezone", DateTimeZone.UTC.getID());
-    JsonArray parameters = new JsonArray();
-    parameters.add(parameter);
-    request.add("params", parameters);
+	@Test
+	public void testMissingService() throws IOException {
+		JsonObject request = new JsonObject();
+		request.addProperty("method", ".GetTime");
+		request.addProperty("id", "identifier");
+		JsonObject parameter = new JsonObject();
+		parameter.addProperty("timezone", DateTimeZone.UTC.getID());
+		JsonArray parameters = new JsonArray();
+		parameters.add(parameter);
+		request.add("params", parameters);
 
-    HttpContent httpContent = new ByteArrayContent("application/json",
-        new Gson().toJson(request).getBytes(Charsets.UTF_8));
+		HttpContent httpContent = new ByteArrayContent("application/json",
+				new Gson().toJson(request).getBytes(Charsets.UTF_8));
 
-    GenericUrl url = new GenericUrl();
-    url.setScheme("http");
-    url.setHost("localhost");
-    url.setPort(port);
-    url.setRawPath("/rpc");
+		GenericUrl url = new GenericUrl();
+		url.setScheme("http");
+		url.setHost("localhost");
+		url.setPort(port);
+		url.setRawPath("/rpc");
 
-    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-    HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
+		HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+		HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
 
-    HttpResponse httpResponse = httpRequest.execute();
-    Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
-    Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
+		HttpResponse httpResponse = httpRequest.execute();
+		Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
+		Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
 
-    JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
-        .getAsJsonObject());
+		JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
+				.getAsJsonObject());
 
-    Assert.assertTrue(response.isError());
-    Assert.assertEquals(400, response.error().status().code());
-  }
+		Assert.assertTrue(response.isError());
+		Assert.assertEquals(400, response.error().status().code());
+	}
 
-  @Test
-  public void testMissingMethod() throws IOException {
-    JsonObject request = new JsonObject();
-    request.addProperty("method", "TimeService.");
-    request.addProperty("id", "identifier");
-    JsonObject parameter = new JsonObject();
-    parameter.addProperty("timezone", DateTimeZone.UTC.getID());
-    JsonArray parameters = new JsonArray();
-    parameters.add(parameter);
-    request.add("params", parameters);
+	@Test
+	public void testMissingMethod() throws IOException {
+		JsonObject request = new JsonObject();
+		request.addProperty("method", "TimeService.");
+		request.addProperty("id", "identifier");
+		JsonObject parameter = new JsonObject();
+		parameter.addProperty("timezone", DateTimeZone.UTC.getID());
+		JsonArray parameters = new JsonArray();
+		parameters.add(parameter);
+		request.add("params", parameters);
 
-    HttpContent httpContent = new ByteArrayContent("application/json",
-        new Gson().toJson(request).getBytes(Charsets.UTF_8));
+		HttpContent httpContent = new ByteArrayContent("application/json",
+				new Gson().toJson(request).getBytes(Charsets.UTF_8));
 
-    GenericUrl url = new GenericUrl();
-    url.setScheme("http");
-    url.setHost("localhost");
-    url.setPort(port);
-    url.setRawPath("/rpc");
+		GenericUrl url = new GenericUrl();
+		url.setScheme("http");
+		url.setHost("localhost");
+		url.setPort(port);
+		url.setRawPath("/rpc");
 
-    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-    HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
+		HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+		HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
 
-    HttpResponse httpResponse = httpRequest.execute();
-    Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
-    Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
+		HttpResponse httpResponse = httpRequest.execute();
+		Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
+		Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
 
-    JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
-        .getAsJsonObject());
+		JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
+				.getAsJsonObject());
 
-    Assert.assertTrue(response.isError());
-    Assert.assertEquals(400, response.error().status().code());
-  }
+		Assert.assertTrue(response.isError());
+		Assert.assertEquals(400, response.error().status().code());
+	}
 
-  @Test
-  public void testMissingId() throws IOException {
-    JsonObject request = new JsonObject();
-    request.addProperty("method", "TimeService.GetTime");
-    JsonObject parameter = new JsonObject();
-    parameter.addProperty("timezone", DateTimeZone.UTC.getID());
-    JsonArray parameters = new JsonArray();
-    parameters.add(parameter);
-    request.add("params", parameters);
+	@Test
+	public void testMissingId() throws IOException {
+		JsonObject request = new JsonObject();
+		request.addProperty("method", "TimeService.GetTime");
+		JsonObject parameter = new JsonObject();
+		parameter.addProperty("timezone", DateTimeZone.UTC.getID());
+		JsonArray parameters = new JsonArray();
+		parameters.add(parameter);
+		request.add("params", parameters);
 
-    HttpContent httpContent = new ByteArrayContent("application/json",
-        new Gson().toJson(request).getBytes(Charsets.UTF_8));
+		HttpContent httpContent = new ByteArrayContent("application/json",
+				new Gson().toJson(request).getBytes(Charsets.UTF_8));
 
-    GenericUrl url = new GenericUrl();
-    url.setScheme("http");
-    url.setHost("localhost");
-    url.setPort(port);
-    url.setRawPath("/rpc");
+		GenericUrl url = new GenericUrl();
+		url.setScheme("http");
+		url.setHost("localhost");
+		url.setPort(port);
+		url.setRawPath("/rpc");
 
-    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-    HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
+		HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+		HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
 
-    HttpResponse httpResponse = httpRequest.execute();
-    Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
-    Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
+		HttpResponse httpResponse = httpRequest.execute();
+		Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
+		Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
 
-    JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
-        .getAsJsonObject());
+		JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
+				.getAsJsonObject());
 
-    Assert.assertTrue(response.isError());
-    Assert.assertEquals(400, response.error().status().code());
-  }
+		Assert.assertTrue(response.isError());
+		Assert.assertEquals(400, response.error().status().code());
+	}
 
-  @Test
-  public void testMissingParam() throws IOException {
-    JsonObject request = new JsonObject();
-    request.addProperty("method", ".GetTime");
-    request.addProperty("id", "identifier");
-    JsonObject parameter = new JsonObject();
-    parameter.addProperty("timezone", DateTimeZone.UTC.getID());
+	@Test
+	public void testMissingParam() throws IOException {
+		JsonObject request = new JsonObject();
+		request.addProperty("method", ".GetTime");
+		request.addProperty("id", "identifier");
+		JsonObject parameter = new JsonObject();
+		parameter.addProperty("timezone", DateTimeZone.UTC.getID());
 
-    HttpContent httpContent = new ByteArrayContent("application/json",
-        new Gson().toJson(request).getBytes(Charsets.UTF_8));
+		HttpContent httpContent = new ByteArrayContent("application/json",
+				new Gson().toJson(request).getBytes(Charsets.UTF_8));
 
-    GenericUrl url = new GenericUrl();
-    url.setScheme("http");
-    url.setHost("localhost");
-    url.setPort(port);
-    url.setRawPath("/rpc");
+		GenericUrl url = new GenericUrl();
+		url.setScheme("http");
+		url.setHost("localhost");
+		url.setPort(port);
+		url.setRawPath("/rpc");
 
-    HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
-    HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
+		HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+		HttpRequest httpRequest = requestFactory.buildPostRequest(url, httpContent);
 
-    HttpResponse httpResponse = httpRequest.execute();
-    Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
-    Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
+		HttpResponse httpResponse = httpRequest.execute();
+		Assert.assertEquals(HttpStatusCodes.STATUS_CODE_OK, httpResponse.getStatusCode());
+		Reader reader = new InputStreamReader(httpResponse.getContent(), Charsets.UTF_8);
 
-    JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
-        .getAsJsonObject());
+		JsonRpcResponse response = JsonRpcResponse.fromJson(new JsonParser().parse(reader)
+				.getAsJsonObject());
 
-    Assert.assertTrue(response.isError());
-    Assert.assertEquals(400, response.error().status().code());
-  }
+		Assert.assertTrue(response.isError());
+		Assert.assertEquals(400, response.error().status().code());
+	}
 }

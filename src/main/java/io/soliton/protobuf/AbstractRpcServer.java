@@ -16,7 +16,9 @@
 
 package io.soliton.protobuf;
 
-import com.google.common.util.concurrent.*;
+import java.util.logging.Logger;
+
+import com.google.common.util.concurrent.AbstractIdleService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -26,8 +28,6 @@ import io.netty.channel.ServerChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 
-import java.util.logging.Logger;
-
 /**
  * Provides a default implementation of {@link Server} which binds to a TCP
  * port.
@@ -36,77 +36,78 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractRpcServer extends AbstractIdleService implements Server {
 
-  private static final Logger logger = Logger.getLogger(AbstractRpcServer.class.getCanonicalName());
+	private static final Logger logger = Logger
+			.getLogger(AbstractRpcServer.class.getCanonicalName());
 
-  private final int port;
-  private final ServiceGroup serviceGroup = new DefaultServiceGroup();
-  private final Class<? extends ServerChannel> channelClass;
-  private final EventLoopGroup parentGroup;
-  private final EventLoopGroup childGroup;
+	private final int port;
+	private final ServiceGroup serviceGroup = new DefaultServiceGroup();
+	private final Class<? extends ServerChannel> channelClass;
+	private final EventLoopGroup parentGroup;
+	private final EventLoopGroup childGroup;
 
-  private Channel channel;
+	private Channel channel;
 
-  protected AbstractRpcServer(int port, Class<? extends ServerChannel> channelClass,
-      EventLoopGroup parentGroup, EventLoopGroup childGroup) {
-    this.port = port;
-    this.channelClass = channelClass;
-    this.parentGroup = parentGroup;
-    this.childGroup = childGroup;
-  }
+	protected AbstractRpcServer(int port, Class<? extends ServerChannel> channelClass,
+			EventLoopGroup parentGroup, EventLoopGroup childGroup) {
+		this.port = port;
+		this.channelClass = channelClass;
+		this.parentGroup = parentGroup;
+		this.childGroup = childGroup;
+	}
 
-  /**
-   * Returns the set of services surfaced on this server.
-   */
-  public ServiceGroup serviceGroup() {
-    return serviceGroup;
-  }
+	/**
+	 * Returns the set of services surfaced on this server.
+	 */
+	public ServiceGroup serviceGroup() {
+		return serviceGroup;
+	}
 
-  /**
-   * Starts this server.
-   * <p/>
-   * <p>This is a synchronous operation.</p>
-   */
-  public void startUp() throws Exception {
-    logger.info(String.format("Starting RPC server on port %d", port));
-    ServerBootstrap bootstrap = new ServerBootstrap();
+	/**
+	 * Starts this server.
+	 * <p/>
+	 * <p>This is a synchronous operation.</p>
+	 */
+	public void startUp() throws Exception {
+		logger.info(String.format("Starting RPC server on port %d", port));
+		ServerBootstrap bootstrap = new ServerBootstrap();
 
-    ChannelFuture futureChannel = bootstrap.group(parentGroup, childGroup)
-        .channel(channelClass)
-        .childHandler(channelInitializer())
-        .bind(port)
-        .awaitUninterruptibly();
+		ChannelFuture futureChannel = bootstrap.group(parentGroup, childGroup)
+				.channel(channelClass)
+				.childHandler(channelInitializer())
+				.bind(port)
+				.awaitUninterruptibly();
 
-    if (futureChannel.isSuccess()) {
-      this.channel = futureChannel.channel();
-      logger.info("RPC server started successfully.");
-    } else {
-      logger.info("Failed to start RPC server.");
-      throw new Exception(futureChannel.cause());
-    }
-  }
+		if (futureChannel.isSuccess()) {
+			this.channel = futureChannel.channel();
+			logger.info("RPC server started successfully.");
+		} else {
+			logger.info("Failed to start RPC server.");
+			throw new Exception(futureChannel.cause());
+		}
+	}
 
-  /**
-   * Stops this server.
-   * <p/>
-   * <p>This is a synchronous operation.</p>
-   */
-  public void shutDown() {
-    logger.info("Shutting down RPC server.");
-    channel.close().addListener(new GenericFutureListener<Future<Void>>() {
+	/**
+	 * Stops this server.
+	 * <p/>
+	 * <p>This is a synchronous operation.</p>
+	 */
+	public void shutDown() {
+		logger.info("Shutting down RPC server.");
+		channel.close().addListener(new GenericFutureListener<Future<Void>>() {
 
-      @Override
-      public void operationComplete(Future<Void> future) throws Exception {
-        parentGroup.shutdownGracefully();
-        childGroup.shutdownGracefully();
-      }
-    }).awaitUninterruptibly();
-  }
+			@Override
+			public void operationComplete(Future<Void> future) throws Exception {
+				parentGroup.shutdownGracefully();
+				childGroup.shutdownGracefully();
+			}
+		}).awaitUninterruptibly();
+	}
 
-  /**
-   * Implemented by subclasses to customize their handling of incoming
-   * requests.
-   *
-   * @see ChannelInitializers
-   */
-  protected abstract ChannelInitializer<? extends Channel> channelInitializer();
+	/**
+	 * Implemented by subclasses to customize their handling of incoming
+	 * requests.
+	 *
+	 * @see ChannelInitializers
+	 */
+	protected abstract ChannelInitializer<? extends Channel> channelInitializer();
 }

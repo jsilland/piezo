@@ -16,6 +16,12 @@
 
 package io.soliton.protobuf;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.MapMaker;
@@ -24,12 +30,6 @@ import com.google.protobuf.Message;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Base class for client-side RPC handlers that encode RPC calls in an
@@ -41,171 +41,175 @@ import java.util.logging.Logger;
  */
 public abstract class EnvelopeClientHandler<I, O> extends SimpleChannelInboundHandler<O> {
 
-  private static final Logger logger = Logger.getLogger(
-      EnvelopeClientHandler.class.getCanonicalName());
+	private static final Logger logger = Logger.getLogger(
+			EnvelopeClientHandler.class.getCanonicalName());
 
-  private final ConcurrentMap<Long, EnvelopeFuture<? extends Message>> inFlightRequests =
-      new MapMaker().makeMap();
-  private Channel channel;
-  private ClientLogger clientLogger;
+	private final ConcurrentMap<Long, EnvelopeFuture<? extends Message>> inFlightRequests =
+			new MapMaker().makeMap();
+	private Channel channel;
+	private ClientLogger clientLogger;
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void channelRead0(ChannelHandlerContext context, O response) throws Exception {
-    Envelope envelope = null;
-    try {
-      envelope = convertResponse(response);
-    } catch (ResponseConversionException rce) {
-      logger.log(Level.WARNING, "Failed to convert response", rce);
-      return;
-    }
-    EnvelopeFuture<? extends Message> future = inFlightRequests.remove(envelope.getRequestId());
-    if (future == null) {
-      logger.warning(String.format("Received response from %s for unknown request id: %d",
-          channel.remoteAddress(), envelope.getRequestId()));
-      return;
-    }
-    future.setResponse(envelope);
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void channelRead0(ChannelHandlerContext context, O response) throws Exception {
+		Envelope envelope = null;
+		try {
+			envelope = convertResponse(response);
+		} catch (ResponseConversionException rce) {
+			logger.log(Level.WARNING, "Failed to convert response", rce);
+			return;
+		}
+		EnvelopeFuture<? extends Message> future = inFlightRequests.remove(envelope.getRequestId
+				());
 
-  /**
-   * Converts an outgoing RPC method call into the request type supported by
-   * this handler.
-   *
-   * @param request the outgoing request
-   * @return the converted request
-   */
-  public abstract I convertRequest(Envelope request);
+		if (future == null) {
+			logger.warning(String.format("Received response from %s for unknown request id: %d",
+					channel.remoteAddress(), envelope.getRequestId()));
+			return;
+		}
+		future.setResponse(envelope);
+	}
 
-  /**
-   * Converts an incoming RPC response from the type supported by this handler
-   * into an {@link Envelope}.
-   *
-   * @param response the response received from the server
-   * @return the incoming response
-   * @throws ResponseConversionException in case an error happens during the
-   * conversion
-   */
-  public abstract Envelope convertResponse(O response) throws ResponseConversionException;
+	/**
+	 * Converts an outgoing RPC method call into the request type supported by
+	 * this handler.
+	 *
+	 * @param request the outgoing request
+	 * @return the converted request
+	 */
+	public abstract I convertRequest(Envelope request);
 
-  /**
-   * Returns a new provisional handle on the future result of an RPC
-   * invocation.
-   * <p/>
-   * <p>This handler will keep track of the returned object and set its
-   * response when it is received from the server.</p>
-   *
-   * @param clientMethod the method that is intended to be invoked.
-   */
-  public <O extends Message> EnvelopeFuture<O> newProvisionalResponse(
-      ClientMethod<O> clientMethod) {
-    long requestId = ThreadLocalRandom.current().nextLong();
-    EnvelopeFuture<O> outputFuture = new EnvelopeFuture<>(requestId, clientMethod,
-        new Cancel(requestId), clientLogger);
-    inFlightRequests.put(requestId, outputFuture);
-    return outputFuture;
-  }
+	/**
+	 * Converts an incoming RPC response from the type supported by this handler
+	 * into an {@link Envelope}.
+	 *
+	 * @param response the response received from the server
+	 * @return the incoming response
+	 * @throws ResponseConversionException in case an error happens during the
+	 * conversion
+	 */
+	public abstract Envelope convertResponse(O response) throws ResponseConversionException;
 
-  /**
-   * Terminates the processing an RPC based on its identifier.
-   *
-   * @param requestId the identifier of the request to terminate.
-   */
-  public ListenableFuture<? extends Message> finish(long requestId) {
-    return inFlightRequests.remove(requestId);
-  }
+	/**
+	 * Returns a new provisional handle on the future result of an RPC
+	 * invocation.
+	 * <p/>
+	 * <p>This handler will keep track of the returned object and set its
+	 * response when it is received from the server.</p>
+	 *
+	 * @param clientMethod the method that is intended to be invoked.
+	 */
+	public <O extends Message> EnvelopeFuture<O> newProvisionalResponse(
+			ClientMethod<O> clientMethod) {
+		long requestId = ThreadLocalRandom.current().nextLong();
+		EnvelopeFuture<O> outputFuture = new EnvelopeFuture<>(requestId, clientMethod,
+				new Cancel(requestId), clientLogger);
+		inFlightRequests.put(requestId, outputFuture);
+		return outputFuture;
+	}
 
-  /**
-   * Sets the channel this handler will use to communicate with the remote
-   * server.
-   *
-   * @param channel a channel connected to the server
-   */
-  public void setChannel(Channel channel) {
-    this.channel = Preconditions.checkNotNull(channel);
-  }
+	/**
+	 * Terminates the processing an RPC based on its identifier.
+	 *
+	 * @param requestId the identifier of the request to terminate.
+	 */
+	public ListenableFuture<? extends Message> finish(long requestId) {
+		return inFlightRequests.remove(requestId);
+	}
 
-  /**
-   * Sets the logger this handler should report events to.
-   *
-   * @param clientLogger a client logger.
-   */
-  public void setClientLogger(ClientLogger clientLogger) {
-    this.clientLogger = Preconditions.checkNotNull(clientLogger);
-  }
+	/**
+	 * Sets the channel this handler will use to communicate with the remote
+	 * server.
+	 *
+	 * @param channel a channel connected to the server
+	 */
+	public void setChannel(Channel channel) {
+		this.channel = Preconditions.checkNotNull(channel);
+	}
 
-  /**
-   * Returns the mapping in which the RPC requests pending with the server
-   * are kept.
-   */
-  @VisibleForTesting
-  public Map<Long, EnvelopeFuture<? extends Message>> inFlightRequests() {
-    return inFlightRequests;
-  }
+	/**
+	 * Sets the logger this handler should report events to.
+	 *
+	 * @param clientLogger a client logger.
+	 */
+	public void setClientLogger(ClientLogger clientLogger) {
+		this.clientLogger = Preconditions.checkNotNull(clientLogger);
+	}
 
-  /**
-   * Returns the outbound channel connected to the remote server.
-   */
-  protected Channel channel() {
-    return channel;
-  }
+	/**
+	 * Returns the mapping in which the RPC requests pending with the server
+	 * are kept.
+	 */
+	@VisibleForTesting
+	public Map<Long, EnvelopeFuture<? extends Message>> inFlightRequests() {
+		return inFlightRequests;
+	}
 
-  /**
-   * Implements the cancellation logic for an individual RPC.
-   *
-   * @author Julien Silland (julien@soliton.io)
-   */
-  class Cancel implements Runnable {
-    private final long requestId;
+	/**
+	 * Returns the outbound channel connected to the remote server.
+	 */
+	protected Channel channel() {
+		return channel;
+	}
 
-    public Cancel(long requestId) {
-      this.requestId = requestId;
-    }
+	/**
+	 * Occurs when a received response couldn't be converted into an
+	 * {@link Envelope}.
+	 */
+	protected static class ResponseConversionException extends Exception {
 
-    @Override
-    public void run() {
-      if (inFlightRequests.remove(requestId) != null) {
-        Envelope request = Envelope.newBuilder()
-            .setRequestId(requestId)
-            .setControl(Control.newBuilder().setCancel(true))
-            .build();
-        channel.writeAndFlush(convertRequest(request));
-      }
-    }
-  }
+		private final Object response;
 
-  /**
-   * Occurs when a received response couldn't be converted into an
-   * {@link Envelope}.
-   */
-  protected static class ResponseConversionException extends Exception {
-    private final Object response;
+		/**
+		 * Exhaustive constructor
+		 *
+		 * @param response the response that couldn't be converted
+		 */
+		public ResponseConversionException(Object response) {
+			this.response = response;
+		}
 
-    /**
-     * Exhaustive constructor
-     *
-     * @param response the response that couldn't be converted
-     */
-    public ResponseConversionException(Object response) {
-      this.response = response;
-    }
+		/**
+		 * Exhaustive constructor
+		 *
+		 * @param response the response that couldn't be converted
+		 * @param exception the underlying cause of the failure
+		 */
+		public ResponseConversionException(Object response, Throwable exception) {
+			super(exception);
+			this.response = response;
+		}
 
-    /**
-     * Exhaustive constructor
-     *
-     * @param response the response that couldn't be converted
-     * @param exception the underlying cause of the failure
-     */
-    public ResponseConversionException(Object response, Throwable exception) {
-      super(exception);
-      this.response = response;
-    }
+		@Override
+		public String getMessage() {
+			return String.format("Could not convert incoming response: %s", response);
+		}
+	}
 
-    @Override
-    public String getMessage() {
-      return String.format("Could not convert incoming response: %s", response);
-    }
-  }
+	/**
+	 * Implements the cancellation logic for an individual RPC.
+	 *
+	 * @author Julien Silland (julien@soliton.io)
+	 */
+	class Cancel implements Runnable {
+
+		private final long requestId;
+
+		public Cancel(long requestId) {
+			this.requestId = requestId;
+		}
+
+		@Override
+		public void run() {
+			if (inFlightRequests.remove(requestId) != null) {
+				Envelope request = Envelope.newBuilder()
+						.setRequestId(requestId)
+						.setControl(Control.newBuilder().setCancel(true))
+						.build();
+				channel.writeAndFlush(convertRequest(request));
+			}
+		}
+	}
 }

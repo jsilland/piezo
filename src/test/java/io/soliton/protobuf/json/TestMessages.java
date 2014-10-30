@@ -31,59 +31,59 @@ import org.junit.Test;
  */
 public class TestMessages {
 
-  @Test
-  public void testRoundtripSingleFields() throws Exception {
-    All original = All.newBuilder()
-        .setString("string")
-        .setDouble(0.1)
-        .setFloat(.6f)
-        .setInt32(42)
-        .setInt64(32L)
-        .setUint32(64)
-        .setUint64(128)
-        .setSint32(256)
-        .setSint64(512)
-        .setFixed32(1024)
-        .setFixed64(2048)
-        .setSfixed32(4096)
-        .setSfixed64(8192)
-        .setBool(false)
-        .setBytes(ByteString.copyFrom("你好".getBytes(Charsets.UTF_8)))
-        .setMessage(All.newBuilder().setString("string2"))
-        .setFoo(All.Foo.BAR)
-        .build();
+	@Test
+	public void testRoundtripSingleFields() throws Exception {
+		All original = All.newBuilder()
+				.setString("string")
+				.setDouble(0.1)
+				.setFloat(.6f)
+				.setInt32(42)
+				.setInt64(32L)
+				.setUint32(64)
+				.setUint64(128)
+				.setSint32(256)
+				.setSint64(512)
+				.setFixed32(1024)
+				.setFixed64(2048)
+				.setSfixed32(4096)
+				.setSfixed64(8192)
+				.setBool(false)
+				.setBytes(ByteString.copyFrom("你好".getBytes(Charsets.UTF_8)))
+				.setMessage(All.newBuilder().setString("string2"))
+				.setFoo(All.Foo.BAR)
+				.build();
 
-    JsonObject json = Messages.toJson(original);
+		JsonObject json = Messages.toJson(original);
 
-    All copy = (All) Messages.fromJson(All.newBuilder(), json);
-    Assert.assertEquals(copy, original);
-  }
+		All copy = (All) Messages.fromJson(All.newBuilder(), json);
+		Assert.assertEquals(copy, original);
+	}
 
-  @Test
-  public void testRoundtriprepeatedFields() throws Exception {
-    All original = All.newBuilder()
-        .addRepeatedString("string")
-        .addRepeatedDouble(0.1)
-        .addRepeatedFloat(.6f)
-        .addRepeatedInt32(42)
-        .addRepeatedInt64(32L)
-        .addRepeatedUint32(64)
-        .addRepeatedUint64(128)
-        .addRepeatedSint32(256)
-        .addRepeatedSint64(512)
-        .addRepeatedFixed32(1024)
-        .addRepeatedFixed64(2048)
-        .addRepeatedSfixed32(4096)
-        .addRepeatedSfixed64(8192)
-        .addRepeatedBool(false)
-        .addRepeatedBytes(ByteString.copyFrom("你好".getBytes(Charsets.UTF_8)))
-        .addRepeatedMessage(All.newBuilder().setString("string2"))
-        .addRepeatedFoo(All.Foo.BAR)
-        .build();
+	@Test
+	public void testRoundtriprepeatedFields() throws Exception {
+		All original = All.newBuilder()
+				.addRepeatedString("string")
+				.addRepeatedDouble(0.1)
+				.addRepeatedFloat(.6f)
+				.addRepeatedInt32(42)
+				.addRepeatedInt64(32L)
+				.addRepeatedUint32(64)
+				.addRepeatedUint64(128)
+				.addRepeatedSint32(256)
+				.addRepeatedSint64(512)
+				.addRepeatedFixed32(1024)
+				.addRepeatedFixed64(2048)
+				.addRepeatedSfixed32(4096)
+				.addRepeatedSfixed64(8192)
+				.addRepeatedBool(false)
+				.addRepeatedBytes(ByteString.copyFrom("你好".getBytes(Charsets.UTF_8)))
+				.addRepeatedMessage(All.newBuilder().setString("string2"))
+				.addRepeatedFoo(All.Foo.BAR)
+				.build();
 
-    JsonObject json = Messages.toJson(original);
+		JsonObject json = Messages.toJson(original);
 
-    All copy = (All) Messages.fromJson(All.newBuilder(), json);
-    Assert.assertEquals(copy, original);
-  }
+		All copy = (All) Messages.fromJson(All.newBuilder(), json);
+		Assert.assertEquals(copy, original);
+	}
 }

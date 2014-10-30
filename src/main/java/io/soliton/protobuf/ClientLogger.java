@@ -26,45 +26,43 @@ import com.google.protobuf.Message;
  */
 public interface ClientLogger {
 
-  /**
-   * Invoked upon a client-side method being called.
-   *
-   * @param method the method being invoked
-   */
-  public void logMethodCall(ClientMethod<?> method);
+	/**
+	 * Invoked upon a client-side method being called.
+	 *
+	 * @param method the method being invoked
+	 */
+	public void logMethodCall(ClientMethod<?> method);
 
-  /**
-   * Invoked upon an error happening on the client-side, e.g. failed method
-   * call because of a broken link.
-   *
-   * @param method the method that was called when the error happened
-   * @param cause the underlying cause of the error
-   */
-  public void logClientError(ClientMethod<?> method, Throwable cause);
+	/**
+	 * Invoked upon an error happening on the client-side, e.g. failed method
+	 * call because of a broken link.
+	 *
+	 * @param method the method that was called when the error happened
+	 * @param cause the underlying cause of the error
+	 */
+	public void logClientError(ClientMethod<?> method, Throwable cause);
 
-  /**
-   * Invoked when an error was returned from the server.
-   *
-   * @param serviceName
-   * @param methodName
-   * @param cause the underlying cause of the error, as returned by the server
-   */
-  public void logServerError(String serviceName, String methodName, Throwable cause);
+	/**
+	 * Invoked when an error was returned from the server.
+	 *
+	 * @param cause the underlying cause of the error, as returned by the server
+	 */
+	public void logServerError(String serviceName, String methodName, Throwable cause);
 
-  /**
-   * Invoked upon an error occurring while sending a method call to the server.
-   *
-   * @param method the method that was invoked
-   * @param cause the cause of the error
-   * @param <O> the response type of the method
-   */
-  public <O extends Message> void logLinkError(ClientMethod<O> method, Throwable cause);
+	/**
+	 * Invoked upon an error occurring while sending a method call to the server.
+	 *
+	 * @param method the method that was invoked
+	 * @param cause the cause of the error
+	 * @param <O> the response type of the method
+	 */
+	public <O extends Message> void logLinkError(ClientMethod<O> method, Throwable cause);
 
-  /**
-   * Invoked when a method invocation returned a successful response.
-   *
-   * @param clientMethod the method that was invoked
-   * @param <O> the return type of the method
-   */
-  public <O extends Message> void logSuccess(ClientMethod<O> clientMethod);
+	/**
+	 * Invoked when a method invocation returned a successful response.
+	 *
+	 * @param clientMethod the method that was invoked
+	 * @param <O> the return type of the method
+	 */
+	public <O extends Message> void logSuccess(ClientMethod<O> clientMethod);
 }

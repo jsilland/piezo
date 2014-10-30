@@ -34,58 +34,59 @@ import com.google.protobuf.DescriptorProtos.FileOptions;
  */
 public class TypeMap {
 
-  private final ImmutableMap<String, JavaType> types;
+	private final ImmutableMap<String, JavaType> types;
 
-  private TypeMap(ImmutableMap<String, JavaType> types) {
-    this.types = types;
-  }
+	private TypeMap(ImmutableMap<String, JavaType> types) {
+		this.types = types;
+	}
 
-  public static TypeMap of(FileDescriptorProto protoFile) {
-    ImmutableMap.Builder<String, JavaType> types = ImmutableMap.builder();
-    FileOptions options = protoFile.getOptions();
+	public static TypeMap of(FileDescriptorProto protoFile) {
+		ImmutableMap.Builder<String, JavaType> types = ImmutableMap.builder();
+		FileOptions options = protoFile.getOptions();
 
-    String protoPackage = "." + (protoFile.hasPackage() ?
-        protoFile.getPackage() : "");
-    String javaPackage = options.hasJavaPackage() ?
-        options.getJavaPackage() : protoFile.hasPackage() ?
-        protoFile.getPackage() : null;
-    String enclosingClass = options.getJavaMultipleFiles() ?
-        null : options.hasJavaOuterClassname() ?
-        options.getJavaOuterClassname() : createOuterJavaClassname(protoFile.getName());
+		String protoPackage = "." + (protoFile.hasPackage() ?
+									 protoFile.getPackage() : "");
+		String javaPackage = options.hasJavaPackage() ?
+							 options.getJavaPackage() : protoFile.hasPackage() ?
+														protoFile.getPackage() : null;
+		String enclosingClass = options.getJavaMultipleFiles() ?
+								null : options.hasJavaOuterClassname() ?
+									   options.getJavaOuterClassname() : createOuterJavaClassname(
+				protoFile.getName());
 
-    for (DescriptorProto message : protoFile.getMessageTypeList()) {
-      types.put(protoPackage + "." + message.getName(),
-          new JavaType(javaPackage, enclosingClass, message.getName()));
-    }
+		for (DescriptorProto message : protoFile.getMessageTypeList()) {
+			types.put(protoPackage + "." + message.getName(),
+					new JavaType(javaPackage, enclosingClass, message.getName()));
+		}
 
-    return new TypeMap(types.build());
-  }
+		return new TypeMap(types.build());
+	}
 
-  /**
-   * @param name
-   * @return
-   */
-  @VisibleForTesting
-  static String createOuterJavaClassname(String name) {
-    if (name.endsWith(".proto")) {
-      name = name.substring(0, name.length() - ".proto".length());
-    }
-    name = Iterables.getLast(Splitter.on('/').split(name));
-    name = name.replace('-', '_');
-    name = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name);
-    return Character.toUpperCase(name.charAt(0)) + name.substring(1);
-  }
+	/**
+	 * @param name
+	 * @return
+	 */
+	@VisibleForTesting
+	static String createOuterJavaClassname(String name) {
+		if (name.endsWith(".proto")) {
+			name = name.substring(0, name.length() - ".proto".length());
+		}
+		name = Iterables.getLast(Splitter.on('/').split(name));
+		name = name.replace('-', '_');
+		name = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name);
+		return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+	}
 
-  public JavaType lookup(String name) {
-    return types.get(name);
-  }
+	public JavaType lookup(String name) {
+		return types.get(name);
+	}
 
-  public TypeMap mergeWith(TypeMap other) {
-    return null;
-  }
+	public TypeMap mergeWith(TypeMap other) {
+		return null;
+	}
 
-  @Override
-  public String toString() {
-    return Objects.toStringHelper(this).add("Types", types).toString();
-  }
+	@Override
+	public String toString() {
+		return Objects.toStringHelper(this).add("Types", types).toString();
+	}
 }

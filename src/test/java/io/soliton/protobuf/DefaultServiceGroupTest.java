@@ -28,35 +28,36 @@ import org.junit.Test;
  */
 public class DefaultServiceGroupTest {
 
-  @Test
-  public void testAddAndLookup() {
-    Service service = new Service() {
+	@Test
+	public void testAddAndLookup() {
+		Service service = new Service() {
 
-      @Override
-      public ServerMethod<? extends Message, ? extends Message> lookup(String name) {
-        return null;
-      }
+			@Override
+			public ServerMethod<? extends Message, ? extends Message> lookup(String name) {
+				return null;
+			}
 
-      @Override
-      public ImmutableMap<String, ServerMethod<? extends Message, ? extends Message>> methods() {
-        return null;
-      }
+			@Override
+			public ImmutableMap<String, ServerMethod<? extends Message,
+					? extends Message>> methods() {
+				return null;
+			}
 
-      @Override
-      public String shortName() {
-        return "Service";
-      }
+			@Override
+			public String shortName() {
+				return "Service";
+			}
 
-      @Override
-      public String fullName() {
-        return "proto.package.Service";
-      }
-    };
+			@Override
+			public String fullName() {
+				return "proto.package.Service";
+			}
+		};
 
-    ServiceGroup group = new DefaultServiceGroup();
-    Assert.assertNull(group.lookupByName("Service"));
-    group.addService(service);
-    Assert.assertNull(group.lookupByName("Service"));
-    Assert.assertNotNull(group.lookupByName("proto.package.Service"));
-  }
+		ServiceGroup group = new DefaultServiceGroup();
+		Assert.assertNull(group.lookupByName("Service"));
+		group.addService(service);
+		Assert.assertNull(group.lookupByName("Service"));
+		Assert.assertNotNull(group.lookupByName("proto.package.Service"));
+	}
 }

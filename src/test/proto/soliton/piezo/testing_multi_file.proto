@@ -4,13 +4,13 @@ option java_package = "io.soliton.protobuf.testing";
 option java_multiple_files = true;
 
 message TimeRequest {
-  optional string timezone = 1;
+	optional string timezone = 1;
 }
 
 message TimeResponse {
-  optional int64 time = 1;
+	optional int64 time = 1;
 }
 
 service TimeService {
-  rpc GetTime (TimeRequest) returns (TimeResponse);
+	rpc GetTime (TimeRequest) returns (TimeResponse);
 }

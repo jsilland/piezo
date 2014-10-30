@@ -36,53 +36,54 @@ import org.mockito.Mockito;
  */
 public class JsonRpcCallbackTest {
 
-  @Test
-  public void testOnSuccess() {
-    JsonObject payload = new JsonObject();
-    payload.addProperty("foo", "bar");
-    JsonRpcResponse response = JsonRpcResponse.success(payload, new JsonPrimitive(2));
-    Channel channel = Mockito.mock(Channel.class);
+	@Test
+	public void testOnSuccess() {
+		JsonObject payload = new JsonObject();
+		payload.addProperty("foo", "bar");
+		JsonRpcResponse response = JsonRpcResponse.success(payload, new JsonPrimitive(2));
+		Channel channel = Mockito.mock(Channel.class);
 
-    JsonRpcCallback callback = new JsonRpcCallback(new JsonPrimitive(2), channel, false);
-    callback.onSuccess(response);
+		JsonRpcCallback callback = new JsonRpcCallback(new JsonPrimitive(2), channel, false);
+		callback.onSuccess(response);
 
-    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-    Mockito.verify(channel).writeAndFlush(captor.capture());
+		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(channel).writeAndFlush(captor.capture());
 
-    Object captured = captor.getValue();
-    Assert.assertTrue(captured instanceof FullHttpResponse);
-    FullHttpResponse httpResponse = (FullHttpResponse) captured;
-    Assert.assertEquals("application/json",
-        httpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE));
+		Object captured = captor.getValue();
+		Assert.assertTrue(captured instanceof FullHttpResponse);
+		FullHttpResponse httpResponse = (FullHttpResponse) captured;
+		Assert.assertEquals("application/json",
+				httpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE));
 
-    JsonElement responseElement = new JsonParser().parse(
-        httpResponse.content().toString(Charsets.UTF_8));
+		JsonElement responseElement = new JsonParser().parse(
+				httpResponse.content().toString(Charsets.UTF_8));
 
-    Assert.assertEquals("bar",
-        JsonRpcResponse.fromJson((JsonObject) responseElement).result().get("foo").getAsString());
-  }
+		Assert.assertEquals("bar",
+				JsonRpcResponse.fromJson((JsonObject) responseElement).result().get("foo")
+						.getAsString());
+	}
 
-  @Test
-  public void testOnFailure() {
-    Channel channel = Mockito.mock(Channel.class);
+	@Test
+	public void testOnFailure() {
+		Channel channel = Mockito.mock(Channel.class);
 
-    JsonRpcCallback callback = new JsonRpcCallback(new JsonPrimitive(2), channel, false);
-    callback.onFailure(new Exception("Uh oh"));
+		JsonRpcCallback callback = new JsonRpcCallback(new JsonPrimitive(2), channel, false);
+		callback.onFailure(new Exception("Uh oh"));
 
-    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-    Mockito.verify(channel).writeAndFlush(captor.capture());
+		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+		Mockito.verify(channel).writeAndFlush(captor.capture());
 
-    Object captured = captor.getValue();
-    Assert.assertTrue(captured instanceof FullHttpResponse);
-    FullHttpResponse httpResponse = (FullHttpResponse) captured;
-    Assert.assertEquals("application/json",
-        httpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE));
+		Object captured = captor.getValue();
+		Assert.assertTrue(captured instanceof FullHttpResponse);
+		FullHttpResponse httpResponse = (FullHttpResponse) captured;
+		Assert.assertEquals("application/json",
+				httpResponse.headers().get(HttpHeaders.Names.CONTENT_TYPE));
 
-    JsonElement responseElement = new JsonParser().parse(
-        httpResponse.content().toString(Charsets.UTF_8));
+		JsonElement responseElement = new JsonParser().parse(
+				httpResponse.content().toString(Charsets.UTF_8));
 
-    JsonRpcError error = JsonRpcResponse.fromJson((JsonObject) responseElement).error();
-    Assert.assertTrue(error.getMessage().contains("Uh oh"));
-    Assert.assertEquals(500, error.status().code());
-  }
+		JsonRpcError error = JsonRpcResponse.fromJson((JsonObject) responseElement).error();
+		Assert.assertTrue(error.getMessage().contains("Uh oh"));
+		Assert.assertEquals(500, error.status().code());
+	}
 }
