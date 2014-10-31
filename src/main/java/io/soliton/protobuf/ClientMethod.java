@@ -27,23 +27,23 @@ import com.google.protobuf.Parser;
  */
 public interface ClientMethod<O> {
 
-  /**
-   * Returns the name of the service in which this method is defined.
-   */
-  public String serviceName();
+	/**
+	 * Returns the name of the service in which this method is defined.
+	 */
+	public String serviceName();
 
-  /**
-   * Returns the name of this method.
-   */
-  public String name();
+	/**
+	 * Returns the name of this method.
+	 */
+	public String name();
 
-  /**
-   * Returns a protocol buffer parser for this method's return type.
-   */
-  public Parser<O> outputParser();
+	/**
+	 * Returns a protocol buffer parser for this method's return type.
+	 */
+	public Parser<O> outputParser();
 
-  /**
-   * Returns a protocol buffer builder for this method's return type.
-   */
-  public Message.Builder outputBuilder();
+	/**
+	 * Returns a protocol buffer builder for this method's return type.
+	 */
+	public Message.Builder outputBuilder();
 }

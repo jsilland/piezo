@@ -26,28 +26,28 @@ import com.google.protobuf.Message;
  */
 public interface Service {
 
-  /**
-   * Looks up a method in this service.
-   *
-   * @param name the name of the method to look up
-   * @return the found method of {@code null} if no method with the given
-   *         name was found
-   */
-  public ServerMethod<? extends Message, ? extends Message> lookup(String name);
+	/**
+	 * Looks up a method in this service.
+	 *
+	 * @param name the name of the method to look up
+	 * @return the found method of {@code null} if no method with the given
+	 * name was found
+	 */
+	public ServerMethod<? extends Message, ? extends Message> lookup(String name);
 
-  /**
-   * Returns the set of methods defined in this service, keyed by name.
-   */
-  public ImmutableMap<String, ServerMethod<? extends Message, ? extends Message>> methods();
+	/**
+	 * Returns the set of methods defined in this service, keyed by name.
+	 */
+	public ImmutableMap<String, ServerMethod<? extends Message, ? extends Message>> methods();
 
-  /**
-   * Returns the name of the service, as declared in the {@code .proto} file.
-   */
-  public String shortName();
+	/**
+	 * Returns the name of the service, as declared in the {@code .proto} file.
+	 */
+	public String shortName();
 
-  /**
-   * Returns the fully-qualified name of the service, which includes the
-   * {@code .proto} package name.
-   */
-  public String fullName();
+	/**
+	 * Returns the fully-qualified name of the service, which includes the
+	 * {@code .proto} package name.
+	 */
+	public String fullName();
 }

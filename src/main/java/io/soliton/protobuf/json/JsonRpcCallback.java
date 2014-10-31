@@ -16,6 +16,9 @@
 
 package io.soliton.protobuf.json;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.gson.Gson;
@@ -32,9 +35,6 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-
 /**
  * Implements the logic executed upon a service method returning a result or
  * throwing an exception.
@@ -43,57 +43,58 @@ import java.io.OutputStreamWriter;
  */
 class JsonRpcCallback implements FutureCallback<JsonRpcResponse> {
 
-  private static final Gson GSON_PP = new GsonBuilder()
-      .disableHtmlEscaping()
-      .generateNonExecutableJson()
-      .setPrettyPrinting()
-      .create();
-  private static final Gson GSON = new GsonBuilder()
-      .disableHtmlEscaping()
-      .generateNonExecutableJson()
-      .create();
+	private static final Gson GSON_PP = new GsonBuilder()
+			.disableHtmlEscaping()
+			.generateNonExecutableJson()
+			.setPrettyPrinting()
+			.create();
+	private static final Gson GSON = new GsonBuilder()
+			.disableHtmlEscaping()
+			.generateNonExecutableJson()
+			.create();
 
 
-  private final JsonElement id;
-  private final Channel channel;
-  private final boolean prettyPrint;
+	private final JsonElement id;
+	private final Channel channel;
+	private final boolean prettyPrint;
 
-  /**
-   * Exhaustive constructor.
-   *
-   * @param id the identifier of the request, as sent by the client
-   * @param channel the channel on which the communication is taking place
-   * @param prettyPrint determines whether the output should be pretty-printed
-   */
-  public JsonRpcCallback(JsonElement id, Channel channel, boolean prettyPrint) {
-    this.id = id;
-    this.channel = channel;
-    this.prettyPrint = prettyPrint;
-  }
+	/**
+	 * Exhaustive constructor.
+	 *
+	 * @param id the identifier of the request, as sent by the client
+	 * @param channel the channel on which the communication is taking place
+	 * @param prettyPrint determines whether the output should be pretty-printed
+	 */
+	public JsonRpcCallback(JsonElement id, Channel channel, boolean prettyPrint) {
+		this.id = id;
+		this.channel = channel;
+		this.prettyPrint = prettyPrint;
+	}
 
-  @Override
-  public void onSuccess(JsonRpcResponse response) {
-    ByteBuf responseBuffer = Unpooled.buffer();
-    JsonWriter writer = new JsonWriter(
-        new OutputStreamWriter(new ByteBufOutputStream(responseBuffer), Charsets.UTF_8));
-    (prettyPrint ? GSON_PP : GSON).toJson(response.toJson(), writer);
-    try {
-      writer.flush();
-    } catch (IOException ioe) {
-      // Deliberately ignored, no I/O is involved
-    }
-    FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-        HttpResponseStatus.OK, responseBuffer);
-    httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, "application/json");
-    httpResponse.headers().set(HttpHeaders.Names.CONTENT_LENGTH, responseBuffer.readableBytes());
-    channel.writeAndFlush(httpResponse);
-  }
+	@Override
+	public void onSuccess(JsonRpcResponse response) {
+		ByteBuf responseBuffer = Unpooled.buffer();
+		JsonWriter writer = new JsonWriter(
+				new OutputStreamWriter(new ByteBufOutputStream(responseBuffer), Charsets.UTF_8));
+		(prettyPrint ? GSON_PP : GSON).toJson(response.toJson(), writer);
+		try {
+			writer.flush();
+		} catch (IOException ioe) {
+			// Deliberately ignored, no I/O is involved
+		}
+		FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+				HttpResponseStatus.OK, responseBuffer);
+		httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, "application/json");
+		httpResponse.headers()
+				.set(HttpHeaders.Names.CONTENT_LENGTH, responseBuffer.readableBytes());
+		channel.writeAndFlush(httpResponse);
+	}
 
-  @Override
-  public void onFailure(Throwable t) {
-    JsonRpcError error = new JsonRpcError(HttpResponseStatus.INTERNAL_SERVER_ERROR,
-        t.getMessage());
-    JsonRpcResponse response = JsonRpcResponse.error(error, id);
-    onSuccess(response);
-  }
+	@Override
+	public void onFailure(Throwable t) {
+		JsonRpcError error = new JsonRpcError(HttpResponseStatus.INTERNAL_SERVER_ERROR,
+				t.getMessage());
+		JsonRpcResponse response = JsonRpcResponse.error(error, id);
+		onSuccess(response);
+	}
 }

@@ -27,25 +27,25 @@ import org.junit.Test;
  */
 public class JsonRpcErrorTest {
 
-  @Test
-  public void testAccessors() {
-    JsonRpcError error = new JsonRpcError(HttpResponseStatus.BAD_REQUEST, "Dude !");
-    Assert.assertEquals(HttpResponseStatus.BAD_REQUEST, error.status());
-    Assert.assertEquals("Dude !", error.getMessage());
-  }
+	@Test
+	public void testAccessors() {
+		JsonRpcError error = new JsonRpcError(HttpResponseStatus.BAD_REQUEST, "Dude !");
+		Assert.assertEquals(HttpResponseStatus.BAD_REQUEST, error.status());
+		Assert.assertEquals("Dude !", error.getMessage());
+	}
 
-  @Test
-  public void testToJson() {
-    JsonRpcError error = new JsonRpcError(HttpResponseStatus.BAD_REQUEST, "Dude !");
-    Assert.assertEquals(400, error.toJson().get("code").getAsInt());
-    Assert.assertEquals("Dude !", error.toJson().get("message").getAsString());
-  }
+	@Test
+	public void testToJson() {
+		JsonRpcError error = new JsonRpcError(HttpResponseStatus.BAD_REQUEST, "Dude !");
+		Assert.assertEquals(400, error.toJson().get("code").getAsInt());
+		Assert.assertEquals("Dude !", error.toJson().get("message").getAsString());
+	}
 
-  @Test
-  public void testFromJson() {
-    JsonElement element = new JsonParser().parse("{\"code\": 400, \"message\": \"Dude !\"}");
-    JsonRpcError error = JsonRpcError.fromJson(element.getAsJsonObject());
-    Assert.assertEquals(HttpResponseStatus.BAD_REQUEST, error.status());
-    Assert.assertEquals("Dude !", error.getMessage());
-  }
+	@Test
+	public void testFromJson() {
+		JsonElement element = new JsonParser().parse("{\"code\": 400, \"message\": \"Dude !\"}");
+		JsonRpcError error = JsonRpcError.fromJson(element.getAsJsonObject());
+		Assert.assertEquals(HttpResponseStatus.BAD_REQUEST, error.status());
+		Assert.assertEquals("Dude !", error.getMessage());
+	}
 }

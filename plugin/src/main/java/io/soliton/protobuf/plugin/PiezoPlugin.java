@@ -16,12 +16,12 @@
 
 package io.soliton.protobuf.plugin;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 import com.google.common.base.Preconditions;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.compiler.PluginProtos.CodeGeneratorRequest;
-
-import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * Main class of the Piezo plugin.
@@ -30,23 +30,23 @@ import java.io.OutputStream;
  */
 public class PiezoPlugin {
 
-  private final CodeGeneratorRequest request;
-  private final OutputStream output;
+	private final CodeGeneratorRequest request;
+	private final OutputStream output;
 
-  public PiezoPlugin(CodeGeneratorRequest request, OutputStream output) {
-    this.request = Preconditions.checkNotNull(request);
-    this.output = Preconditions.checkNotNull(output);
-  }
+	public PiezoPlugin(CodeGeneratorRequest request, OutputStream output) {
+		this.request = Preconditions.checkNotNull(request);
+		this.output = Preconditions.checkNotNull(output);
+	}
 
-  public void run() throws IOException {
-    for (FileDescriptorProto file : request.getProtoFileList()) {
-      new ProtoFileHandler(TypeMap.of(file), output).handle(file);
-    }
-  }
+	public void run() throws IOException {
+		for (FileDescriptorProto file : request.getProtoFileList()) {
+			new ProtoFileHandler(TypeMap.of(file), output).handle(file);
+		}
+	}
 
-  public static void main(String... args) throws IOException {
-    CodeGeneratorRequest request = CodeGeneratorRequest.newBuilder()
-        .mergeFrom(System.in).build();
-    new PiezoPlugin(request, System.out).run();
-  }
+	public static void main(String... args) throws IOException {
+		CodeGeneratorRequest request = CodeGeneratorRequest.newBuilder()
+				.mergeFrom(System.in).build();
+		new PiezoPlugin(request, System.out).run();
+	}
 }

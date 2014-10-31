@@ -16,10 +16,10 @@
 
 package io.soliton.protobuf;
 
+import java.util.Map;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-
-import java.util.Map;
 
 /**
  * Default implementation of {@link ServiceGroup}.
@@ -28,27 +28,27 @@ import java.util.Map;
  */
 public class DefaultServiceGroup implements ServiceGroup {
 
-  private final Map<String, Service> services = Maps.newHashMap();
+	private final Map<String, Service> services = Maps.newHashMap();
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void addService(Service service) {
-    Preconditions.checkNotNull(service);
-    services.put(service.fullName(), service);
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void addService(Service service) {
+		Preconditions.checkNotNull(service);
+		services.put(service.fullName(), service);
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Service lookupByName(String name) {
-    return services.get(name);
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Service lookupByName(String name) {
+		return services.get(name);
+	}
 
-  @Override
-  public String toString() {
-    return services.toString();
-  }
+	@Override
+	public String toString() {
+		return services.toString();
+	}
 }

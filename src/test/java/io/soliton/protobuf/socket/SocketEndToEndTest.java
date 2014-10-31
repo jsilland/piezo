@@ -20,11 +20,11 @@ import io.soliton.protobuf.AbstractEndToEndTest;
 import io.soliton.protobuf.Client;
 import io.soliton.protobuf.Server;
 
+import java.io.IOException;
+
 import com.google.common.net.HostAndPort;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-
-import java.io.IOException;
 
 /**
  * End-to-end tests for the socket-based client-server pair.
@@ -33,26 +33,26 @@ import java.io.IOException;
  */
 public class SocketEndToEndTest extends AbstractEndToEndTest {
 
-  private static RpcServer server;
+	private static RpcServer server;
 
-  @BeforeClass
-  public static void setUp() throws Exception {
-    server = RpcServer.newServer(findAvailablePort()).build();
-    server.startAsync().awaitRunning();
-  }
+	@BeforeClass
+	public static void setUp() throws Exception {
+		server = RpcServer.newServer(findAvailablePort()).build();
+		server.startAsync().awaitRunning();
+	}
 
-  @AfterClass
-  public static void tearDown() {
-    server.stopAsync().awaitTerminated();
-  }
+	@AfterClass
+	public static void tearDown() {
+		server.stopAsync().awaitTerminated();
+	}
 
-  @Override
-  protected Server server() {
-    return server;
-  }
+	@Override
+	protected Server server() {
+		return server;
+	}
 
-  @Override
-  protected Client client() throws IOException {
-    return RpcClient.newClient(HostAndPort.fromParts("localhost", port)).build();
-  }
+	@Override
+	protected Client client() throws IOException {
+		return RpcClient.newClient(HostAndPort.fromParts("localhost", port)).build();
+	}
 }

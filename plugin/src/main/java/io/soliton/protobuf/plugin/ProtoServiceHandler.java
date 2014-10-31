@@ -16,6 +16,9 @@
 
 package io.soliton.protobuf.plugin;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -28,9 +31,6 @@ import com.google.protobuf.DescriptorProtos.ServiceDescriptorProto;
 import com.google.protobuf.compiler.PluginProtos.CodeGeneratorResponse;
 import org.mvel2.templates.TemplateRuntime;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 /**
  * This class is in charge of generating the code of the concrete service
  * implementation.
@@ -39,54 +39,54 @@ import java.io.OutputStream;
  */
 public class ProtoServiceHandler {
 
-  private final String javaPackage;
-  private final TypeMap types;
-  private final boolean multipleFiles;
-  private final String outerClassName;
-  private final String protoPackage;
-  private final OutputStream output;
+	private final String javaPackage;
+	private final TypeMap types;
+	private final boolean multipleFiles;
+	private final String outerClassName;
+	private final String protoPackage;
+	private final OutputStream output;
 
-  public ProtoServiceHandler(String javaPackage, TypeMap types, boolean multipleFiles,
-      String outerClassName, String protoPackage, OutputStream output) {
-    this.javaPackage = javaPackage;
-    this.types = Preconditions.checkNotNull(types);
-    this.multipleFiles = multipleFiles;
-    this.outerClassName = multipleFiles ? null : Preconditions.checkNotNull(outerClassName);
-    this.protoPackage = protoPackage;
-    this.output = Preconditions.checkNotNull(output);
-  }
+	public ProtoServiceHandler(String javaPackage, TypeMap types, boolean multipleFiles,
+			String outerClassName, String protoPackage, OutputStream output) {
+		this.javaPackage = javaPackage;
+		this.types = Preconditions.checkNotNull(types);
+		this.multipleFiles = multipleFiles;
+		this.outerClassName = multipleFiles ? null : Preconditions.checkNotNull(outerClassName);
+		this.protoPackage = protoPackage;
+		this.output = Preconditions.checkNotNull(output);
+	}
 
-  public void handle(ServiceDescriptorProto service) throws IOException {
-    ImmutableList.Builder<ServiceHandlerData.Method> methods = ImmutableList.builder();
-    for (MethodDescriptorProto method : service.getMethodList()) {
-      ServiceHandlerData.Method methodData = new ServiceHandlerData.Method(
-          method.getName(),
-          CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName()),
-          types.lookup(method.getInputType()).toString(),
-          types.lookup(method.getOutputType()).toString());
-      methods.add(methodData);
-    }
+	public void handle(ServiceDescriptorProto service) throws IOException {
+		ImmutableList.Builder<ServiceHandlerData.Method> methods = ImmutableList.builder();
+		for (MethodDescriptorProto method : service.getMethodList()) {
+			ServiceHandlerData.Method methodData = new ServiceHandlerData.Method(
+					method.getName(),
+					CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.getName()),
+					types.lookup(method.getInputType()).toString(),
+					types.lookup(method.getOutputType()).toString());
+			methods.add(methodData);
+		}
 
-    String fullName = Joiner.on('.').skipNulls().join(protoPackage, service.getName());
+		String fullName = Joiner.on('.').skipNulls().join(protoPackage, service.getName());
 
-    ServiceHandlerData.Service serviceData = new ServiceHandlerData.Service(
-        service.getName(), fullName, methods.build());
-    ServiceHandlerData data = new ServiceHandlerData(javaPackage, multipleFiles, serviceData);
+		ServiceHandlerData.Service serviceData = new ServiceHandlerData.Service(
+				service.getName(), fullName, methods.build());
+		ServiceHandlerData data = new ServiceHandlerData(javaPackage, multipleFiles, serviceData);
 
-    String template = Resources.toString(Resources.getResource(this.getClass(),
-        "service_class.mvel"), Charsets.UTF_8);
-    String serviceFile = (String) TemplateRuntime.eval(template,
-        ImmutableMap.<String, Object>of("handler", data));
+		String template = Resources.toString(Resources.getResource(this.getClass(),
+				"service_class.mvel"), Charsets.UTF_8);
+		String serviceFile = (String) TemplateRuntime.eval(template,
+				ImmutableMap.<String, Object>of("handler", data));
 
-    CodeGeneratorResponse.Builder response = CodeGeneratorResponse.newBuilder();
-    CodeGeneratorResponse.File.Builder file = CodeGeneratorResponse.File.newBuilder();
-    file.setContent(serviceFile);
-    file.setName(javaPackage.replace('.', '/') + '/' + service.getName() + ".java");
-    if (!multipleFiles) {
-      file.setName(javaPackage.replace('.', '/') + '/' + outerClassName + ".java");
-      file.setInsertionPoint("outer_class_scope");
-    }
-    response.addFile(file);
-    response.build().writeTo(output);
-  }
+		CodeGeneratorResponse.Builder response = CodeGeneratorResponse.newBuilder();
+		CodeGeneratorResponse.File.Builder file = CodeGeneratorResponse.File.newBuilder();
+		file.setContent(serviceFile);
+		file.setName(javaPackage.replace('.', '/') + '/' + service.getName() + ".java");
+		if (!multipleFiles) {
+			file.setName(javaPackage.replace('.', '/') + '/' + outerClassName + ".java");
+			file.setInsertionPoint("outer_class_scope");
+		}
+		response.addFile(file);
+		response.build().writeTo(output);
+	}
 }

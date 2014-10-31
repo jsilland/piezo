@@ -27,25 +27,25 @@ import com.google.protobuf.Parser;
  */
 public interface ServerMethod<I, O> {
 
-  /**
-   * Returns the name of this method.
-   */
-  public String name();
+	/**
+	 * Returns the name of this method.
+	 */
+	public String name();
 
-  /**
-   * Returns a parser capable of parsing this method's input parameter.
-   */
-  public Parser<I> inputParser();
+	/**
+	 * Returns a parser capable of parsing this method's input parameter.
+	 */
+	public Parser<I> inputParser();
 
-  /**
-   * Returns a builder capable of building this method's input parameter.
-   */
-  public Message.Builder inputBuilder();
+	/**
+	 * Returns a builder capable of building this method's input parameter.
+	 */
+	public Message.Builder inputBuilder();
 
-  /**
-   * Invokes this method with the given parameter.
-   *
-   * @param request the parameter received from the client
-   */
-  public ListenableFuture<O> invoke(I request);
+	/**
+	 * Invokes this method with the given parameter.
+	 *
+	 * @param request the parameter received from the client
+	 */
+	public ListenableFuture<O> invoke(I request);
 }

@@ -33,67 +33,67 @@ import com.google.protobuf.Message;
  */
 public class EnvelopeFuture<V extends Message> extends AbstractFuture<V> {
 
-  private final long requestId;
-  private final ClientMethod<V> clientMethod;
-  private final ClientLogger clientLogger;
-  private final Runnable runOnCancel;
+	private final long requestId;
+	private final ClientMethod<V> clientMethod;
+	private final ClientLogger clientLogger;
+	private final Runnable runOnCancel;
 
-  public EnvelopeFuture(long requestId, ClientMethod<V> clientMethod,
-      Runnable runOnCancel, ClientLogger clientLogger) {
-    this.requestId = requestId;
-    this.clientMethod = Preconditions.checkNotNull(clientMethod);
-    this.runOnCancel = Preconditions.checkNotNull(runOnCancel);
-    this.clientLogger = Preconditions.checkNotNull(clientLogger);
-  }
+	public EnvelopeFuture(long requestId, ClientMethod<V> clientMethod,
+			Runnable runOnCancel, ClientLogger clientLogger) {
+		this.requestId = requestId;
+		this.clientMethod = Preconditions.checkNotNull(clientMethod);
+		this.runOnCancel = Preconditions.checkNotNull(runOnCancel);
+		this.clientLogger = Preconditions.checkNotNull(clientLogger);
+	}
 
-  /**
-   * Sets the response envelope of this promise.
-   *
-   * @param response the envelope of the response.
-   */
-  public void setResponse(Envelope response) {
-    if (response.hasControl() && response.getControl().hasError()) {
-      setException(new Exception(response.getControl().getError()));
-      return;
-    }
-    try {
-      set(clientMethod.outputParser().parseFrom(response.getPayload()));
-      clientLogger.logSuccess(clientMethod);
-    } catch (InvalidProtocolBufferException ipbe) {
-      setException(ipbe);
-    }
-  }
+	/**
+	 * Sets the response envelope of this promise.
+	 *
+	 * @param response the envelope of the response.
+	 */
+	public void setResponse(Envelope response) {
+		if (response.hasControl() && response.getControl().hasError()) {
+			setException(new Exception(response.getControl().getError()));
+			return;
+		}
+		try {
+			set(clientMethod.outputParser().parseFrom(response.getPayload()));
+			clientLogger.logSuccess(clientMethod);
+		} catch (InvalidProtocolBufferException ipbe) {
+			setException(ipbe);
+		}
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean set(V value) {
-    return super.set(value);
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean set(V value) {
+		return super.set(value);
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean setException(Throwable throwable) {
-    clientLogger.logServerError(clientMethod.serviceName(), clientMethod.name(), throwable);
-    return super.setException(throwable);
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean setException(Throwable throwable) {
+		clientLogger.logServerError(clientMethod.serviceName(), clientMethod.name(), throwable);
+		return super.setException(throwable);
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean cancel(boolean mayInterruptIfRunning) {
-    if (super.cancel(mayInterruptIfRunning)) {
-      runOnCancel.run();
-      return true;
-    }
-    return false;
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean cancel(boolean mayInterruptIfRunning) {
+		if (super.cancel(mayInterruptIfRunning)) {
+			runOnCancel.run();
+			return true;
+		}
+		return false;
+	}
 
-  public long requestId() {
-    return requestId;
-  }
+	public long requestId() {
+		return requestId;
+	}
 }

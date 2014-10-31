@@ -18,8 +18,13 @@ package io.soliton.protobuf.quartz;
 
 import io.soliton.protobuf.Envelope;
 import io.soliton.protobuf.EnvelopeServerHandler;
-import io.soliton.protobuf.ServiceGroup;
 import io.soliton.protobuf.ServerLogger;
+import io.soliton.protobuf.ServiceGroup;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.netty.buffer.ByteBuf;
@@ -34,11 +39,6 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 /**
  * Server-side handler in charge of decoding requests and dispatching them
  * to individual services.
@@ -47,68 +47,78 @@ import java.net.URISyntaxException;
  */
 class QuartzServerHandler extends EnvelopeServerHandler<HttpRequest, HttpResponse> {
 
-  private final String path;
+	private final String path;
 
-  /**
-   * Creates new handler that will dispatch requests to the services registered
-   * in the given service group.
-   *
-   * @param serviceGroup the group of services to surface.
-   * @param path the HTTP path this handler should handle request on.
-   */
-  QuartzServerHandler(ServiceGroup serviceGroup, String path, ServerLogger serverLogger) {
-    super(serviceGroup, serverLogger);
-    this.path = path;
-  }
+	/**
+	 * Creates new handler that will dispatch requests to the services registered
+	 * in the given service group.
+	 *
+	 * @param serviceGroup the group of services to surface.
+	 * @param path the HTTP path this handler should handle request on.
+	 */
+	QuartzServerHandler(ServiceGroup serviceGroup, String path, ServerLogger serverLogger) {
+		super(serviceGroup, serverLogger);
+		this.path = path;
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected Envelope convertRequest(HttpRequest httpRequest) throws RequestConversionException {
-    if (!(httpRequest instanceof HttpContent)) {
-      throw new RequestConversionException(httpRequest);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected Envelope convertRequest(HttpRequest httpRequest) throws RequestConversionException {
+		if (!(httpRequest instanceof HttpContent)) {
+			throw new RequestConversionException(httpRequest);
+		}
 
-    HttpContent content = (HttpContent) httpRequest;
-    try {
-      return Envelope.PARSER.parseFrom(content.content().array());
-    } catch (InvalidProtocolBufferException ipbe) {
-      throw new RequestConversionException(httpRequest, ipbe);
-    }
-  }
+		HttpContent content = (HttpContent) httpRequest;
+		try {
+			byte[] bytes;
+			ByteBuf innerContent = content.content();
+			// Not all ByteBuf implementation is backed by a byte array, so check
+			if (innerContent.hasArray()) {
+				bytes = innerContent.array();
+			} else {
+				bytes = new byte[innerContent.readableBytes()];
+				innerContent.getBytes(innerContent.readerIndex(), bytes);
+			}
+			return Envelope.PARSER.parseFrom(bytes);
+		} catch (InvalidProtocolBufferException ipbe) {
+			throw new RequestConversionException(httpRequest, ipbe);
+		}
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected boolean accept(HttpRequest request) {
-    try {
-      return new URI(request.getUri()).getPath().startsWith(path);
-    } catch (URISyntaxException e) {
-      logger.warning("Cannot validate URL path, skipping request");
-      return false;
-    }
-  }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean accept(HttpRequest request) {
+		try {
+			return new URI(request.getUri()).getPath().startsWith(path);
+		} catch (URISyntaxException e) {
+			logger.warning("Cannot validate URL path, skipping request");
+			return false;
+		}
+	}
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  protected HttpResponse convertResponse(Envelope response) {
-    ByteBuf responseBuffer = Unpooled.buffer();
-    try {
-      OutputStream outputStream = new ByteBufOutputStream(responseBuffer);
-      response.writeTo(outputStream);
-      outputStream.flush();
-    } catch (IOException e) {
-      // Deliberately ignored, as the underlying operation doesn't involve I/O
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected HttpResponse convertResponse(Envelope response) {
+		ByteBuf responseBuffer = Unpooled.buffer();
+		try {
+			OutputStream outputStream = new ByteBufOutputStream(responseBuffer);
+			response.writeTo(outputStream);
+			outputStream.flush();
+		} catch (IOException e) {
+			// Deliberately ignored, as the underlying operation doesn't involve I/O
+		}
 
-    FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-        HttpResponseStatus.OK, responseBuffer);
-    httpResponse.headers().set(HttpHeaders.Names.CONTENT_LENGTH, responseBuffer.readableBytes());
-    httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, QuartzProtocol.CONTENT_TYPE);
-    return httpResponse;
-  }
+		FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+				HttpResponseStatus.OK, responseBuffer);
+		httpResponse.headers()
+				.set(HttpHeaders.Names.CONTENT_LENGTH, responseBuffer.readableBytes());
+		httpResponse.headers().set(HttpHeaders.Names.CONTENT_TYPE, QuartzProtocol.CONTENT_TYPE);
+		return httpResponse;
+	}
 }

@@ -26,56 +26,94 @@ import com.google.protobuf.Message;
  */
 public interface ServerLogger {
 
-  /**
-   * Invoked when a method call was decoded and is about to be invoked.
-   *
-   * @param service the service to which the method belongs
-   * @param method the method
-   */
-  void logMethodCall(Service service, ServerMethod<? extends Message, ? extends Message> method);
+	public static ServerLogger NULL_LOGGER = new ServerLogger() {
+		@Override
+		public void logMethodCall(Service service,
+				ServerMethod<? extends Message, ? extends Message> method) {
 
-  /**
-   * Invoked when a method invoked has failed.
-   *
-   * @param serverMethod the method whose invocation failed
-   * @param throwable the cause of the failure
-   */
-  void logServerFailure(ServerMethod<?, ?> serverMethod, Throwable throwable);
+		}
 
-  /**
-   * Invoked when an error occurred while returning daat to the client.
-   *
-   * @param serverMethod the method whose response was being sent
-   * @param cause the cause of the failure
-   */
-  void logLinkFailure(ServerMethod<?, ?> serverMethod, Throwable cause);
+		@Override
+		public void logServerFailure(ServerMethod<?, ?> serverMethod, Throwable throwable) {
 
-  /**
-   * Invoked when a server has successfully returned a response to the client
-   *
-   * @param serverMethod the method that was invoked
-   */
-  void logServerSuccess(ServerMethod<?, ?> serverMethod);
+		}
 
-  /**
-   * Invoked when the server received a request for an unknown service
-   *
-   * @param service the name of the received service
-   */
-  void logUnknownService(Service service);
+		@Override
+		public void logLinkFailure(ServerMethod<?, ?> serverMethod, Throwable cause) {
 
-  /**
-   * Logged when the request sent by the client cannot be decoded
-   *
-   * @param throwable the cause of the error
-   */
-  void logClientError(Throwable throwable);
+		}
 
-  /**
-   * Invoked when the method sent by the client is unknown
-   *
-   * @param service the decoded service
-   * @param method the name of the unknown method
-   */
-  void logUnknownMethod(Service service, String method);
+		@Override
+		public void logServerSuccess(ServerMethod<?, ?> serverMethod) {
+
+		}
+
+		@Override
+		public void logUnknownService(Service service) {
+
+		}
+
+		@Override
+		public void logClientError(Throwable throwable) {
+
+		}
+
+		@Override
+		public void logUnknownMethod(Service service, String method) {
+
+		}
+	};
+
+	/**
+	 * Invoked when a method call was decoded and is about to be invoked.
+	 *
+	 * @param service the service to which the method belongs
+	 * @param method the method
+	 */
+	void logMethodCall(Service service, ServerMethod<? extends Message, ? extends Message> method);
+
+	/**
+	 * Invoked when a method invoked has failed.
+	 *
+	 * @param serverMethod the method whose invocation failed
+	 * @param throwable the cause of the failure
+	 */
+	void logServerFailure(ServerMethod<?, ?> serverMethod, Throwable throwable);
+
+	/**
+	 * Invoked when an error occurred while returning daat to the client.
+	 *
+	 * @param serverMethod the method whose response was being sent
+	 * @param cause the cause of the failure
+	 */
+	void logLinkFailure(ServerMethod<?, ?> serverMethod, Throwable cause);
+
+	/**
+	 * Invoked when a server has successfully returned a response to the client
+	 *
+	 * @param serverMethod the method that was invoked
+	 */
+	void logServerSuccess(ServerMethod<?, ?> serverMethod);
+
+	/**
+	 * Invoked when the server received a request for an unknown service
+	 *
+	 * @param service the name of the received service
+	 */
+	void logUnknownService(Service service);
+
+	/**
+	 * Logged when the request sent by the client cannot be decoded
+	 *
+	 * @param throwable the cause of the error
+	 */
+	void logClientError(Throwable throwable);
+
+	/**
+	 * Invoked when the method sent by the client is unknown
+	 *
+	 * @param service the decoded service
+	 * @param method the name of the unknown method
+	 */
+	void logUnknownMethod(Service service, String method);
 }

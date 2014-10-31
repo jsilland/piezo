@@ -16,10 +16,16 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.ClientLogger;
 import io.soliton.protobuf.ClientMethod;
-import io.soliton.protobuf.NullClientLogger;
 import io.soliton.protobuf.testing.TimeRequest;
 import io.soliton.protobuf.testing.TimeResponse;
+
+import javax.annotation.Nullable;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -35,12 +41,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import javax.annotation.Nullable;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Tests for {@link HttpJsonRpcClient}.
  *
@@ -48,80 +48,80 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpJsonRpcClientTest {
 
-  @Test
-  public void testEncodeMethodCallSuccess() throws InvalidProtocolBufferException {
-    Channel channel = Mockito.mock(Channel.class);
+	@Test
+	public void testEncodeMethodCallSuccess() throws InvalidProtocolBufferException {
+		Channel channel = Mockito.mock(Channel.class);
 
-    Mockito.when(channel.remoteAddress()).thenReturn(
-        new InetSocketAddress(InetAddress.getLoopbackAddress(), 10000));
+		Mockito.when(channel.remoteAddress()).thenReturn(
+				new InetSocketAddress(InetAddress.getLoopbackAddress(), 10000));
 
-    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-    ChannelFuture success = Mockito.mock(ChannelFuture.class);
-    Mockito.when(success.isDone()).thenReturn(true);
-    Mockito.when(success.isSuccess()).thenReturn(true);
-    Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(success);
-    JsonRpcClientHandler handler = new JsonRpcClientHandler();
-    HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc",
-        new NullClientLogger());
+		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+		ChannelFuture success = Mockito.mock(ChannelFuture.class);
+		Mockito.when(success.isDone()).thenReturn(true);
+		Mockito.when(success.isSuccess()).thenReturn(true);
+		Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(success);
+		JsonRpcClientHandler handler = new JsonRpcClientHandler();
+		HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc",
+				ClientLogger.NULL_LOGGER);
 
-    ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
-    Mockito.when(method.serviceName()).thenReturn("TimeService");
-    Mockito.when(method.name()).thenReturn("GetTime");
-    Mockito.when(method.outputBuilder()).thenReturn(TimeResponse.newBuilder());
+		ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
+		Mockito.when(method.serviceName()).thenReturn("TimeService");
+		Mockito.when(method.name()).thenReturn("GetTime");
+		Mockito.when(method.outputBuilder()).thenReturn(TimeResponse.newBuilder());
 
-    client.encodeMethodCall(method, TimeRequest.newBuilder().setTimezone("UTC").build());
+		client.encodeMethodCall(method, TimeRequest.newBuilder().setTimezone("UTC").build());
 
-    Assert.assertEquals(1, handler.inFlightRequests().size());
+		Assert.assertEquals(1, handler.inFlightRequests().size());
 
-    Object captured = captor.getValue();
-    Assert.assertTrue(captured instanceof FullHttpRequest);
-    FullHttpRequest request = (FullHttpRequest) captured;
-    Assert.assertEquals("/rpc?pp=0", request.getUri());
-  }
+		Object captured = captor.getValue();
+		Assert.assertTrue(captured instanceof FullHttpRequest);
+		FullHttpRequest request = (FullHttpRequest) captured;
+		Assert.assertEquals("/rpc?pp=0", request.getUri());
+	}
 
-  @Test
-  public void testEncodeMethodCallFailure() throws InvalidProtocolBufferException,
-      InterruptedException {
-    Channel channel = Mockito.mock(Channel.class);
+	@Test
+	public void testEncodeMethodCallFailure() throws InvalidProtocolBufferException,
+			InterruptedException {
+		Channel channel = Mockito.mock(Channel.class);
 
-    Mockito.when(channel.remoteAddress()).thenReturn(
-        new InetSocketAddress(InetAddress.getLoopbackAddress(), 10000));
+		Mockito.when(channel.remoteAddress()).thenReturn(
+				new InetSocketAddress(InetAddress.getLoopbackAddress(), 10000));
 
-    ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
 
-    DefaultChannelPromise failure = new DefaultChannelPromise(
-        channel, ImmediateEventExecutor.INSTANCE);
-    failure.setFailure(new Exception("OMGWTF"));
-    Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(failure);
+		DefaultChannelPromise failure = new DefaultChannelPromise(
+				channel, ImmediateEventExecutor.INSTANCE);
+		failure.setFailure(new Exception("OMGWTF"));
+		Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(failure);
 
-    JsonRpcClientHandler handler = new JsonRpcClientHandler();
-    HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc",
-        new NullClientLogger());
+		JsonRpcClientHandler handler = new JsonRpcClientHandler();
+		HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc",
+				ClientLogger.NULL_LOGGER);
 
-    ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
-    Mockito.when(method.serviceName()).thenReturn("TimeService");
-    Mockito.when(method.name()).thenReturn("GetTime");
-    Mockito.when(method.outputParser()).thenReturn(TimeResponse.PARSER);
+		ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
+		Mockito.when(method.serviceName()).thenReturn("TimeService");
+		Mockito.when(method.name()).thenReturn("GetTime");
+		Mockito.when(method.outputParser()).thenReturn(TimeResponse.PARSER);
 
-    final CountDownLatch latch = new CountDownLatch(1);
-    FutureCallback<TimeResponse> callback = new FutureCallback<TimeResponse>() {
-      @Override
-      public void onSuccess(@Nullable TimeResponse result) {
-      }
+		final CountDownLatch latch = new CountDownLatch(1);
+		FutureCallback<TimeResponse> callback = new FutureCallback<TimeResponse>() {
+			@Override
+			public void onSuccess(@Nullable TimeResponse result) {
+			}
 
-      @Override
-      public void onFailure(Throwable t) {
-        Assert.assertEquals("OMGWTF", t.getMessage());
-        latch.countDown();
-      }
-    };
+			@Override
+			public void onFailure(Throwable t) {
+				Assert.assertEquals("OMGWTF", t.getMessage());
+				latch.countDown();
+			}
+		};
 
-    ListenableFuture<TimeResponse> future = client.encodeMethodCall(
-        method, TimeRequest.newBuilder().setTimezone("UTC").build());
+		ListenableFuture<TimeResponse> future = client.encodeMethodCall(
+				method, TimeRequest.newBuilder().setTimezone("UTC").build());
 
-    Futures.addCallback(future, callback);
-    latch.await(5, TimeUnit.SECONDS);
+		Futures.addCallback(future, callback);
+		latch.await(5, TimeUnit.SECONDS);
 
-    Assert.assertEquals(0, handler.inFlightRequests().size());
-  }
+		Assert.assertEquals(0, handler.inFlightRequests().size());
+	}
 }

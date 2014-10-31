@@ -32,11 +32,11 @@ import org.joda.time.DateTimeZone;
  */
 public class TimeServer implements TimeService.Interface {
 
-  @Override
-  public ListenableFuture<TimeResponse> getTime(TimeRequest request) {
-    DateTimeZone timeZone = DateTimeZone.forID(request.getTimezone());
-    DateTime now = new DateTime(timeZone);
-    TimeResponse.Builder response = TimeResponse.newBuilder();
-    return Futures.immediateFuture(response.setTime(now.getMillis()).build());
-  }
+	@Override
+	public ListenableFuture<TimeResponse> getTime(TimeRequest request) {
+		DateTimeZone timeZone = DateTimeZone.forID(request.getTimezone());
+		DateTime now = new DateTime(timeZone);
+		TimeResponse.Builder response = TimeResponse.newBuilder();
+		return Futures.immediateFuture(response.setTime(now.getMillis()).build());
+	}
 }
