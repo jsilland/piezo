@@ -66,12 +66,12 @@ public class HttpJsonRpcServerTest {
 		server = HttpJsonRpcServer.newServer(findAvailablePort()).build();
 		Service timeService = TimeService.newService(new TimeServer());
 		server.serviceGroup().addService(timeService);
-		server.start();
+		server.startUp();
 	}
 
 	@AfterClass
 	public static void tearDown() {
-		server.stop();
+		server.shutDown();
 	}
 
 	@Test

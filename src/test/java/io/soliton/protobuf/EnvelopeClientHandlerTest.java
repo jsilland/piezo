@@ -82,7 +82,6 @@ public class EnvelopeClientHandlerTest {
 
 		Channel channel = Mockito.mock(Channel.class);
 		handler.setChannel(channel);
-		handler.setClientLogger(new NullClientLogger());
 		EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(CLIENT_METHOD);
 		future.cancel(true);
 
@@ -99,7 +98,6 @@ public class EnvelopeClientHandlerTest {
 	@Test
 	public void testReceiveResponse() throws Exception {
 		EnvelopeClientHandler handler = new IdentityEnvelopeClientHandler();
-		handler.setClientLogger(new NullClientLogger());
 		EnvelopeFuture<TimeResponse> future = handler.newProvisionalResponse(CLIENT_METHOD);
 
 		final CountDownLatch latch = new CountDownLatch(1);

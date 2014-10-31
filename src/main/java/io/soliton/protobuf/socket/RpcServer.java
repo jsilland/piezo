@@ -19,7 +19,6 @@ package io.soliton.protobuf.socket;
 import io.soliton.protobuf.AbstractRpcServer;
 import io.soliton.protobuf.ChannelInitializers;
 import io.soliton.protobuf.Envelope;
-import io.soliton.protobuf.NullServerLogger;
 import io.soliton.protobuf.ServerLogger;
 
 import com.google.common.base.Preconditions;
@@ -60,7 +59,7 @@ public class RpcServer extends AbstractRpcServer {
 
 	protected ChannelInitializer<? extends Channel> channelInitializer() {
 		return ChannelInitializers.protoBuf(Envelope.getDefaultInstance(),
-				new RpcServerHandler(serviceGroup(), new NullServerLogger()));
+				new RpcServerHandler(serviceGroup(), ServerLogger.NULL_LOGGER));
 	}
 
 	/**
@@ -71,7 +70,7 @@ public class RpcServer extends AbstractRpcServer {
 	public static class Builder {
 
 		private final int port;
-		private ServerLogger serverLogger = new NullServerLogger();
+		private ServerLogger serverLogger = ServerLogger.NULL_LOGGER;
 
 		private Builder(int port) {
 			Preconditions.checkArgument(port > 0 && port < 65536);

@@ -72,7 +72,16 @@ class QuartzServerHandler extends EnvelopeServerHandler<HttpRequest, HttpRespons
 
 		HttpContent content = (HttpContent) httpRequest;
 		try {
-			return Envelope.PARSER.parseFrom(content.content().array());
+			byte[] bytes;
+			ByteBuf innerContent = content.content();
+			// Not all ByteBuf implementation is backed by a byte array, so check
+			if (innerContent.hasArray()) {
+				bytes = innerContent.array();
+			} else {
+				bytes = new byte[innerContent.readableBytes()];
+				innerContent.getBytes(innerContent.readerIndex(), bytes);
+			}
+			return Envelope.PARSER.parseFrom(bytes);
 		} catch (InvalidProtocolBufferException ipbe) {
 			throw new RequestConversionException(httpRequest, ipbe);
 		}

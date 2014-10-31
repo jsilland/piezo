@@ -18,7 +18,6 @@ package io.soliton.protobuf.json;
 
 import io.soliton.protobuf.AbstractRpcServer;
 import io.soliton.protobuf.ChannelInitializers;
-import io.soliton.protobuf.NullServerLogger;
 import io.soliton.protobuf.ServerLogger;
 
 import com.google.common.base.Preconditions;
@@ -62,7 +61,7 @@ public abstract class HttpJsonRpcServer extends AbstractRpcServer {
 
 		private final int port;
 		private String rpcPath = JsonRpcProtocol.DEFAULT_RPC_PATH;
-		private ServerLogger serverLogger = new NullServerLogger();
+		private ServerLogger serverLogger = ServerLogger.NULL_LOGGER;
 
 		private Builder(int port) {
 			Preconditions.checkArgument(port > 0 && port < 65536);

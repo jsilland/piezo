@@ -115,7 +115,7 @@ public class EnvelopeServerHandlerTest {
 		ServiceGroup services = new DefaultServiceGroup();
 		services.addService(service);
 		EnvelopeServerHandler handler = new IdentityServerHandler(services,
-				new NullServerLogger());
+				ServerLogger.NULL_LOGGER);
 
 		handler.channelRead0(context, request);
 
@@ -178,7 +178,7 @@ public class EnvelopeServerHandlerTest {
 		ServiceGroup services = new DefaultServiceGroup();
 		services.addService(service);
 		EnvelopeServerHandler handler = new IdentityServerHandler(services,
-				new NullServerLogger());
+				ServerLogger.NULL_LOGGER);
 
 		handler.channelRead0(context, request);
 
@@ -210,7 +210,7 @@ public class EnvelopeServerHandlerTest {
 		Mockito.when(context.channel()).thenReturn(channel);
 
 		EnvelopeServerHandler handler = new IdentityServerHandler(
-				new DefaultServiceGroup(), new NullServerLogger());
+				new DefaultServiceGroup(), ServerLogger.NULL_LOGGER);
 		handler.channelRead0(context, request);
 
 		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
@@ -240,7 +240,7 @@ public class EnvelopeServerHandlerTest {
 		services.addService(timeService);
 
 		EnvelopeServerHandler handler = new IdentityServerHandler(services,
-				new NullServerLogger());
+				ServerLogger.NULL_LOGGER);
 		handler.channelRead0(context, request);
 
 		ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);

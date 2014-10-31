@@ -22,7 +22,6 @@ import io.soliton.protobuf.ClientLogger;
 import io.soliton.protobuf.ClientMethod;
 import io.soliton.protobuf.Envelope;
 import io.soliton.protobuf.EnvelopeFuture;
-import io.soliton.protobuf.NullClientLogger;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -117,7 +116,7 @@ public class RpcClient implements Client {
 	public static final class Builder {
 
 		private final HostAndPort remoteAddress;
-		private ClientLogger clientLogger = new NullClientLogger();
+		private ClientLogger clientLogger = ClientLogger.NULL_LOGGER;
 
 		private Builder(HostAndPort remoteAddress) {
 			this.remoteAddress = Preconditions.checkNotNull(remoteAddress);

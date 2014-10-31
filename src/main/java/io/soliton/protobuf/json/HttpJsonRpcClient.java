@@ -20,7 +20,6 @@ import io.soliton.protobuf.ChannelInitializers;
 import io.soliton.protobuf.Client;
 import io.soliton.protobuf.ClientLogger;
 import io.soliton.protobuf.ClientMethod;
-import io.soliton.protobuf.NullClientLogger;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -152,7 +151,7 @@ public class HttpJsonRpcClient implements Client {
 
 		private final HostAndPort remoteAddress;
 		private String rpcPath = JsonRpcProtocol.DEFAULT_RPC_PATH;
-		private ClientLogger clientLogger = new NullClientLogger();
+		private ClientLogger clientLogger = ClientLogger.NULL_LOGGER;
 
 		private Builder(HostAndPort remoteAddress) {
 			this.remoteAddress = Preconditions.checkNotNull(remoteAddress);
