@@ -47,7 +47,7 @@ public abstract class EnvelopeClientHandler<I, O> extends SimpleChannelInboundHa
 	private final ConcurrentMap<Long, EnvelopeFuture<? extends Message>> inFlightRequests =
 			new MapMaker().makeMap();
 	private Channel channel;
-	private ClientLogger clientLogger;
+	private ClientLogger clientLogger = ClientLogger.NULL_LOGGER;
 
 	/**
 	 * {@inheritDoc}

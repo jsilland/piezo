@@ -67,7 +67,7 @@ public class EnvelopeFutureTest {
 			}
 		};
 		EnvelopeFuture<TimeResponse> future = new EnvelopeFuture<>(1L, CLIENT_METHOD, cancel,
-				new NullClientLogger());
+				ClientLogger.NULL_LOGGER);
 		Assert.assertEquals(1L, future.requestId());
 	}
 
@@ -91,7 +91,7 @@ public class EnvelopeFutureTest {
 			}
 		};
 		EnvelopeFuture<TimeResponse> future = new EnvelopeFuture<>(1L, CLIENT_METHOD, cancel,
-				new NullClientLogger());
+				ClientLogger.NULL_LOGGER);
 		Envelope response = Envelope.newBuilder()
 				.setPayload(TimeResponse.newBuilder().setTime(12345L).build().toByteString())
 				.build();
@@ -121,7 +121,7 @@ public class EnvelopeFutureTest {
 			}
 		};
 		EnvelopeFuture<TimeResponse> future = new EnvelopeFuture<>(1L, CLIENT_METHOD, cancel,
-				new NullClientLogger());
+				ClientLogger.NULL_LOGGER);
 		Control control = Control.newBuilder()
 				.setError("OMGWTF")
 				.build();
@@ -142,7 +142,7 @@ public class EnvelopeFutureTest {
 			}
 		};
 		EnvelopeFuture<TimeResponse> future = new EnvelopeFuture<>(1L, CLIENT_METHOD, cancel,
-				new NullClientLogger());
+				ClientLogger.NULL_LOGGER);
 		future.cancel(true);
 		latch.await(5, TimeUnit.SECONDS);
 	}

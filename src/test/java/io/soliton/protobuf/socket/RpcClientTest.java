@@ -16,9 +16,9 @@
 
 package io.soliton.protobuf.socket;
 
+import io.soliton.protobuf.ClientLogger;
 import io.soliton.protobuf.ClientMethod;
 import io.soliton.protobuf.Envelope;
-import io.soliton.protobuf.NullClientLogger;
 import io.soliton.protobuf.testing.TimeRequest;
 import io.soliton.protobuf.testing.TimeResponse;
 
@@ -55,7 +55,7 @@ public class RpcClientTest {
 		Mockito.when(success.isSuccess()).thenReturn(true);
 		Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(success);
 		RpcClientHandler handler = new RpcClientHandler();
-		RpcClient client = new RpcClient(channel, handler, new NullClientLogger());
+		RpcClient client = new RpcClient(channel, handler, ClientLogger.NULL_LOGGER);
 
 		ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
 		Mockito.when(method.serviceName()).thenReturn("TimeService");
@@ -86,7 +86,7 @@ public class RpcClientTest {
 		Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(failure);
 
 		RpcClientHandler handler = new RpcClientHandler();
-		RpcClient client = new RpcClient(channel, handler, new NullClientLogger());
+		RpcClient client = new RpcClient(channel, handler, ClientLogger.NULL_LOGGER);
 
 		ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
 		Mockito.when(method.serviceName()).thenReturn("TimeService");

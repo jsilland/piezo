@@ -16,8 +16,8 @@
 
 package io.soliton.protobuf.json;
 
+import io.soliton.protobuf.ClientLogger;
 import io.soliton.protobuf.ClientMethod;
-import io.soliton.protobuf.NullClientLogger;
 import io.soliton.protobuf.testing.TimeRequest;
 import io.soliton.protobuf.testing.TimeResponse;
 
@@ -62,7 +62,7 @@ public class HttpJsonRpcClientTest {
 		Mockito.when(channel.writeAndFlush(captor.capture())).thenReturn(success);
 		JsonRpcClientHandler handler = new JsonRpcClientHandler();
 		HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc",
-				new NullClientLogger());
+				ClientLogger.NULL_LOGGER);
 
 		ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
 		Mockito.when(method.serviceName()).thenReturn("TimeService");
@@ -96,7 +96,7 @@ public class HttpJsonRpcClientTest {
 
 		JsonRpcClientHandler handler = new JsonRpcClientHandler();
 		HttpJsonRpcClient client = new HttpJsonRpcClient(channel, handler, "/rpc",
-				new NullClientLogger());
+				ClientLogger.NULL_LOGGER);
 
 		ClientMethod<TimeResponse> method = Mockito.mock(ClientMethod.class);
 		Mockito.when(method.serviceName()).thenReturn("TimeService");

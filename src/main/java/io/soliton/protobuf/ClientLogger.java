@@ -26,6 +26,33 @@ import com.google.protobuf.Message;
  */
 public interface ClientLogger {
 
+	public static ClientLogger NULL_LOGGER = new ClientLogger() {
+		@Override
+		public void logMethodCall(ClientMethod<?> method) {
+
+		}
+
+		@Override
+		public void logClientError(ClientMethod<?> method, Throwable cause) {
+
+		}
+
+		@Override
+		public void logServerError(String serviceName, String methodName, Throwable cause) {
+
+		}
+
+		@Override
+		public <O extends Message> void logLinkError(ClientMethod<O> method, Throwable cause) {
+
+		}
+
+		@Override
+		public <O extends Message> void logSuccess(ClientMethod<O> clientMethod) {
+
+		}
+	};
+
 	/**
 	 * Invoked upon a client-side method being called.
 	 *

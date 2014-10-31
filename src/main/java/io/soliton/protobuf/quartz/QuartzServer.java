@@ -18,7 +18,6 @@ package io.soliton.protobuf.quartz;
 
 import io.soliton.protobuf.AbstractRpcServer;
 import io.soliton.protobuf.ChannelInitializers;
-import io.soliton.protobuf.NullServerLogger;
 import io.soliton.protobuf.ServerLogger;
 
 import javax.net.ssl.SSLContext;
@@ -64,7 +63,7 @@ public abstract class QuartzServer extends AbstractRpcServer {
 		private final int port;
 		private String path = QuartzProtocol.DEFAULT_PATH;
 		private SSLContext sslContext;
-		private ServerLogger serverLogger = new NullServerLogger();
+		private ServerLogger serverLogger = ServerLogger.NULL_LOGGER;
 
 		private Builder(int port) {
 			Preconditions.checkArgument(port > 0 && port < 65536);

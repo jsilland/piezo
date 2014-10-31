@@ -57,7 +57,7 @@ public class SslQuartzEndToEndTest extends AbstractEndToEndTest {
 		KeyStore keyStore = KeyStore.getInstance("PKCS12");
 		URL url = Resources.getResource(TimeServer.class, "server.b64.p12");
 		InputStream keyStoreStream = BaseEncoding.base64().decodingStream(
-				Resources.newReaderSupplier(url, Charsets.UTF_8).getInput());
+				Resources.asCharSource(url, Charsets.UTF_8).openStream());
 		keyStore.load(keyStoreStream, "password".toCharArray());
 		KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
 		keyManagerFactory.init(keyStore, "password".toCharArray());

@@ -22,7 +22,6 @@ import io.soliton.protobuf.ClientLogger;
 import io.soliton.protobuf.ClientMethod;
 import io.soliton.protobuf.Envelope;
 import io.soliton.protobuf.EnvelopeFuture;
-import io.soliton.protobuf.NullClientLogger;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
@@ -164,7 +163,7 @@ public class QuartzClient implements Client {
 		private final HostAndPort remoteAddress;
 		private SSLContext sslContext;
 		private String path = QuartzProtocol.DEFAULT_PATH;
-		private ClientLogger clientLogger = new NullClientLogger();
+		private ClientLogger clientLogger = ClientLogger.NULL_LOGGER;
 
 		private Builder(HostAndPort remoteAddress) {
 			this.remoteAddress = Preconditions.checkNotNull(remoteAddress);

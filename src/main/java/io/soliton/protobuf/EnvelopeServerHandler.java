@@ -83,7 +83,7 @@ public abstract class EnvelopeServerHandler<I, O> extends SimpleChannelInboundHa
 			return;
 		}
 
-		Envelope envelope = null;
+		Envelope envelope;
 		try {
 			envelope = convertRequest(request);
 		} catch (RequestConversionException rce) {
