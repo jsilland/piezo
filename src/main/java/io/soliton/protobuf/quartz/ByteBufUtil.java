@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.soliton.protobuf;
+package io.soliton.protobuf.quartz;
 
 import io.netty.buffer.ByteBuf;
 
@@ -23,7 +23,7 @@ import io.netty.buffer.ByteBuf;
  *
  * @author Peter Foldes (peter.foldes@gmail.com)
  */
-public class ByteBufUtil {
+class ByteBufUtil {
 
   public static byte[] getBytes(ByteBuf buffer) {
 	  byte[] bytes;

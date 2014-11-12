@@ -4,7 +4,7 @@ jdk:
 before_install:
   - wget https://protobuf.googlecode.com/svn/rc/protobuf-2.6.0.tar.gz
   - tar -xzvf protobuf-2.6.0.tar.gz
-  - cd protobuf-2.6.0 && ./configure --prefix=/usr && sudo make && sudo make install
+  - cd protobuf-2.6.0 && ./configure --prefix=/usr && sudo make && sudo make install && cd ..
   - ./src/main/sh/generate_toolchains.sh
 install: mvn --toolchains toolchains.xml install -DskipTests=true
 script: mvn --toolchains toolchains.xml test
