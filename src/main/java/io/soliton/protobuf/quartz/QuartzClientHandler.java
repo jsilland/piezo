@@ -85,7 +85,7 @@ class QuartzClientHandler extends EnvelopeClientHandler<HttpRequest, HttpRespons
 
     HttpContent content = (HttpContent) response;
     try {
-      return Envelope.PARSER.parseFrom(content.content().array());
+      return Envelope.PARSER.parseFrom(ByteBufUtil.getBytes(content.content()));
     } catch (InvalidProtocolBufferException ipbe) {
       throw new ResponseConversionException(
           String.format("HTTP status: %d, Content: %s", response.getStatus().code(),

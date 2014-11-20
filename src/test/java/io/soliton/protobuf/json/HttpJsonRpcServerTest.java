@@ -20,6 +20,11 @@ import io.soliton.protobuf.Service;
 import io.soliton.protobuf.TimeServer;
 import io.soliton.protobuf.testing.TimeService;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.ServerSocket;
+
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
@@ -38,11 +43,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.ServerSocket;
 
 /**
  * Integration test for the JSON-RPC handler.
@@ -66,12 +66,12 @@ public class HttpJsonRpcServerTest {
     server = HttpJsonRpcServer.newServer(findAvailablePort()).build();
     Service timeService = TimeService.newService(new TimeServer());
     server.serviceGroup().addService(timeService);
-    server.start();
+    server.startUp();
   }
 
   @AfterClass
   public static void tearDown() {
-    server.stop();
+    server.shutDown();
   }
 
   @Test
