@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,9 +43,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractEndToEndTest {
 
-  protected static int port;
-
-  protected abstract Server server();
+  protected abstract List<? extends Server> servers();
 
   protected abstract Client client() throws Exception;
 
@@ -55,7 +54,7 @@ public abstract class AbstractEndToEndTest {
    */
   protected static int findAvailablePort() throws IOException {
     ServerSocket socket = new ServerSocket(0);
-    port = socket.getLocalPort();
+    int port = socket.getLocalPort();
     socket.close();
     return port;
   }
@@ -63,7 +62,9 @@ public abstract class AbstractEndToEndTest {
   @Test
   public void testRequestResponseMultiFile() throws Exception {
     Service timeService = TimeService.newService(new TimeServer());
-    server().serviceGroup().addService(timeService);
+    for (Server server : servers()) {
+      server.serviceGroup().addService(timeService);
+    }
 
     TimeService.Interface timeClient = TimeService.newStub(client());
     TimeRequest request = TimeRequest.newBuilder().setTimezone(DateTimeZone.UTC.getID()).build();
@@ -91,7 +92,9 @@ public abstract class AbstractEndToEndTest {
   @Test
   public void testRequestResponseSingleFile() throws Exception {
     Service dnsService = TestingSingleFile.Dns.newService(new DnsServer());
-    server().serviceGroup().addService(dnsService);
+    for (Server server : servers()) {
+      server.serviceGroup().addService(dnsService);
+    }
 
     TestingSingleFile.Dns.Interface client = TestingSingleFile.Dns.newStub(client());
     TestingSingleFile.DnsRequest request = TestingSingleFile.DnsRequest.newBuilder()

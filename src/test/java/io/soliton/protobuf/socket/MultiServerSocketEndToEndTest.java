@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Julien Silland
+ * Copyright 2014 Peter Foldes
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package io.soliton.protobuf.json;
+package io.soliton.protobuf.socket;
 
 import io.soliton.protobuf.AbstractEndToEndTest;
 import io.soliton.protobuf.Client;
+import io.soliton.protobuf.ClientPool;
+import io.soliton.protobuf.RandomSelector;
 import io.soliton.protobuf.Server;
 
 import com.google.common.collect.Lists;
@@ -25,37 +27,46 @@ import com.google.common.net.HostAndPort;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
- * End-to-end test for the JSON-RPC stack.
+ * End-to-end tests for multiple servers and clients
  *
- * @author Julien Silland (julien@soliton.io)
+ * @author Peter Foldes (peter.foldes@gmail.com)
  */
-public class JsonRpcEndToEndTest extends AbstractEndToEndTest {
+public class MultiServerSocketEndToEndTest extends AbstractEndToEndTest {
 
-  private static HttpJsonRpcServer server;
+  private static List<RpcServer> servers = Lists.newArrayList();
 
   @BeforeClass
   public static void setUp() throws Exception {
-    server = HttpJsonRpcServer.newServer(findAvailablePort()).build();
-    server.startAsync().awaitRunning();
+    for (int i = 0; i < 2; i++) {
+      RpcServer server = RpcServer.newServer(findAvailablePort()).build();
+      server.startAsync().awaitRunning();
+      servers.add(server);
+    }
   }
 
   @AfterClass
   public static void tearDown() {
-    server.stopAsync().awaitTerminated();
+    for (RpcServer server : servers) {
+      server.stopAsync().awaitTerminated();
+    }
   }
 
   @Override
   protected List<? extends Server> servers() {
-    return Lists.newArrayList(server);
+    return this.servers;
   }
 
   @Override
-  protected Client client() throws IOException {
-    return HttpJsonRpcClient.newClient(HostAndPort.fromParts("localhost", server.getPort()))
-        .build();
+  protected Client client() throws Exception {
+    ClientPool pool = new ClientPool(new RandomSelector());
+    for (RpcServer server : this.servers) {
+      pool.add(RpcClient
+          .newClient(HostAndPort.fromParts("localhost", server.getPort()))
+          .build());
+    }
+    return pool;
   }
 }

@@ -22,6 +22,7 @@ import io.soliton.protobuf.Server;
 import io.soliton.protobuf.TimeServer;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Resources;
 import com.google.common.net.HostAndPort;
@@ -40,6 +41,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -74,15 +76,15 @@ public class SslQuartzEndToEndTest extends AbstractEndToEndTest {
   }
 
   @Override
-  protected Server server() {
-    return server;
+  protected List<? extends Server> servers() {
+    return Lists.newArrayList(server);
   }
 
   @Override
   protected Client client() throws Exception {
     SSLContext sslContext = SSLContext.getInstance("TLS");
     sslContext.init(null, TrustfulTrustManagerFactory.getTrustManagers(), null);
-    return QuartzClient.newClient(HostAndPort.fromParts("localhost", port))
+    return QuartzClient.newClient(HostAndPort.fromParts("localhost", server.getPort()))
         .setSslContext(sslContext).build();
   }
 

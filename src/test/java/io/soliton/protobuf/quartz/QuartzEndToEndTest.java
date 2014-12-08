@@ -20,11 +20,13 @@ import io.soliton.protobuf.AbstractEndToEndTest;
 import io.soliton.protobuf.Client;
 import io.soliton.protobuf.Server;
 
+import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * End-to-end tests for the Quartz client-server pair.
@@ -47,12 +49,12 @@ public class QuartzEndToEndTest extends AbstractEndToEndTest {
   }
 
   @Override
-  protected Server server() {
-    return server;
+  protected List<? extends Server> servers() {
+    return Lists.newArrayList(server);
   }
 
   @Override
   protected Client client() throws IOException {
-    return QuartzClient.newClient(HostAndPort.fromParts("localhost", port)).build();
+    return QuartzClient.newClient(HostAndPort.fromParts("localhost", server.getPort())).build();
   }
 }
