@@ -103,6 +103,13 @@ public abstract class AbstractRpcServer extends AbstractIdleService implements S
   }
 
   /**
+   * Returns the port the server is using
+   */
+  public int getPort() {
+    return port;
+  }
+
+  /**
    * Implemented by subclasses to customize their handling of incoming
    * requests.
    *
